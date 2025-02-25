@@ -1,0 +1,84 @@
+{
+    "users": [
+      {
+        "id": 1,
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john@example.com",
+        "password": "password123",
+        "role": "innovator",
+        "profileCompleted": true,
+        "createdAt": "2023-08-10T14:23:45.000Z"
+      },
+      {
+        "id": 2,
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "email": "jane@example.com",
+        "password": "password123",
+        "role": "investor",
+        "profileCompleted": true,
+        "createdAt": "2023-08-11T09:15:30.000Z"
+      }
+    ],
+    "projects": [
+      {
+        "id": 1,
+        "userId": 1,
+        "title": "Renewable Energy Solution",
+        "description": "A breakthrough technology to harness solar energy more efficiently.",
+        "category": "CleanTech",
+        "fundingGoal": 500000,
+        "currentFunding": 325000,
+        "status": "active",
+        "createdAt": "2023-08-15T10:00:00.000Z",
+        "sdgs": [7, 13]
+      }
+    ],
+    "investments": [
+      {
+        "id": 1,
+        "userId": 2,
+        "projectId": 1,
+        "amount": 250000,
+        "status": "completed",
+        "createdAt": "2023-08-18T14:30:00.000Z"
+      }
+    ],
+    "milestones": [
+      {
+        "id": 1,
+        "projectId": 1,
+        "title": "Prototype Development",
+        "description": "Complete the first working prototype",
+        "dueDate": "2023-10-30T00:00:00.000Z",
+        "status": "inProgress"
+      },
+      {
+        "id": 2,
+        "projectId": 1,
+        "title": "Patent Application",
+        "description": "Submit patent application for the technology",
+        "dueDate": "2023-11-15T00:00:00.000Z",
+        "status": "pending"
+      }
+    ],
+    "messages": [
+      {
+        "id": 1,
+        "senderId": 2,
+        "receiverId": 1,
+        "content": "I'm interested in learning more about your project.",
+        "createdAt": "2023-08-20T09:45:00.000Z",
+        "read": true
+      },
+      {
+        "id": 2,
+        "senderId": 1,
+        "receiverId": 2,
+        "content": "Thank you for your interest! Would you like to schedule a call?",
+        "createdAt": "2023-08-20T11:20:00.000Z",
+        "read": false
+      }
+    ]
+  }
