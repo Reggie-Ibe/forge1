@@ -1,6 +1,6 @@
-// src/pages/ProjectDetail.jsx
+// src/pages/ProjectDetail.jsx - Updated with milestone management
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 // Material UI components
@@ -44,6 +44,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EmailIcon from '@mui/icons-material/Email';
+
+// Custom components
+import MilestoneList from '../components/projects/MilestoneList';
 
 // SDG color mapping
 const sdgColors = {
@@ -117,6 +120,9 @@ const ProjectDetail = () => {
   
   // Delete project
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Success message
+  const [successMessage, setSuccessMessage] = useState('');
   
   useEffect(() => {
     fetchProjectData();
@@ -222,12 +228,40 @@ const ProjectDetail = () => {
         throw new Error('Failed to update project funding');
       }
       
+      // Add wallet transaction
+      const walletTransactionData = {
+        userId: user.id,
+        type: 'investment',
+        amount: -parseFloat(investmentAmount),
+        projectId: parseInt(id),
+        status: 'completed',
+        createdAt: new Date().toISOString()
+      };
+      
+      const walletResponse = await fetch(`${apiUrl}/walletTransactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(walletTransactionData),
+      });
+      
+      if (!walletResponse.ok) {
+        console.warn('Failed to record wallet transaction');
+      }
+      
       // Update state
       setProject(updatedProject);
       setInvestments([...investments, investmentData]);
       setShowInvestDialog(false);
       setInvestmentAmount('');
       setInvestmentNote('');
+      setSuccessMessage('Investment successfully processed!');
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
     } catch (err) {
       console.error('Error processing investment:', err);
       setInvestmentError('Failed to process investment. Please try again later.');
@@ -272,9 +306,12 @@ const ProjectDetail = () => {
       
       setShowContactDialog(false);
       setMessageContent('');
+      setSuccessMessage('Message sent successfully!');
       
-      // Show success alert
-      alert('Message sent successfully!');
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
     } catch (err) {
       console.error('Error sending message:', err);
       setMessageError('Failed to send message. Please try again later.');
@@ -306,6 +343,11 @@ const ProjectDetail = () => {
     } finally {
       setIsDeleting(false);
     }
+  };
+  
+  // Handle milestone updates
+  const handleMilestoneUpdate = (updatedMilestones) => {
+    setMilestones(updatedMilestones);
   };
   
   // Format currency
@@ -360,6 +402,7 @@ const ProjectDetail = () => {
   const fundingProgress = (project.currentFunding / project.fundingGoal) * 100;
   const isOwner = user?.id === project.userId;
   const isInvestor = user?.role === 'investor';
+  const isAdmin = user?.role === 'admin';
   
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -372,6 +415,13 @@ const ProjectDetail = () => {
       >
         Back to Projects
       </Button>
+
+      {/* Success Message */}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {successMessage}
+        </Alert>
+      )}
       
       {/* Project header */}
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -608,58 +658,12 @@ const ProjectDetail = () => {
         
         {/* Timeline tab */}
         <TabPanel value={activeTab} index={1}>
-          {milestones.length === 0 ? (
-            <Typography variant="body1" color="text.secondary">
-              No milestones have been added to this project yet.
-            </Typography>
-          ) : (
-            <List>
-              {milestones.map((milestone) => (
-                <ListItem
-                  key={milestone.id}
-                  divider
-                  secondaryAction={
-                    <Chip
-                      label={milestone.status.charAt(0).toUpperCase() + milestone.status.slice(1)}
-                      color={
-                        milestone.status === 'completed'
-                          ? 'success'
-                          : milestone.status === 'inProgress'
-                          ? 'warning'
-                          : 'default'
-                      }
-                    />
-                  }
-                >
-                  <ListItemText
-                    primary={milestone.title}
-                    secondary={
-                      <>
-                        <Typography variant="body2" component="span">
-                          {milestone.description}
-                        </Typography>
-                        <br />
-                        <Typography variant="caption" component="span">
-                          Due: {formatDate(milestone.dueDate)}
-                        </Typography>
-                      </>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          )}
-          
-          {isOwner && (
-            <Box sx={{ mt: 3 }}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate(`/projects/${id}/milestones/add`)}
-              >
-                Add Milestone
-              </Button>
-            </Box>
-          )}
+          <MilestoneList 
+            milestones={milestones}
+            projectId={id}
+            projectOwnerId={project.userId}
+            onMilestoneUpdate={handleMilestoneUpdate}
+          />
         </TabPanel>
         
         {/* Investments tab */}
@@ -857,7 +861,7 @@ function TabPanel(props) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ pt: 3 }}>
+        <Box>
           {children}
         </Box>
       )}

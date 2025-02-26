@@ -1,5 +1,6 @@
 // src/pages/Projects.jsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';  // Add this import
 import { useAuth } from '../contexts/AuthContext';
 
 // Material UI components
@@ -62,6 +63,7 @@ const sdgColors = {
 
 const Projects = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();  // Add this line
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -416,7 +418,7 @@ const Projects = () => {
                     <Button 
                       fullWidth 
                       startIcon={<VisibilityIcon />}
-                      href={`/projects/${project.id}`}
+                      onClick={() => navigate(`/projects/${project.id}`)}
                     >
                       View Details
                     </Button>

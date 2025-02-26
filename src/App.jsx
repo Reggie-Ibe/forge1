@@ -1,4 +1,4 @@
-// src/App.jsx with new routes
+// src/App.jsx with milestone edit route and admin routes
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 
@@ -17,14 +17,19 @@ import CreateProject from './pages/CreateProject';
 import EditProject from './pages/EditProject';
 import ProjectDetail from './pages/ProjectDetail';
 import AddMilestone from './pages/AddMilestone';
+import EditMilestone from './pages/EditMilestone'; // Milestone edit route
 import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Wallet from './pages/Wallet';
 
+// Admin pages
+import AdminDashboard from './pages/AdminDashboard';
+import AdminEscrowManagement from './pages/AdminEscrowManagement';
+
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, loading, user } = useAuth();
-  
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -32,16 +37,16 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       </Box>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
-  
+
   // Check role restrictions if applicable
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/unauthorized" />;
   }
-  
+
   return children;
 };
 
@@ -113,7 +118,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        
+
         {/* Protected routes with layout */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
@@ -122,7 +127,7 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
         <Route path="/profile" element={
           <ProtectedRoute>
             <MainLayout>
@@ -130,7 +135,7 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
         {/* Projects routes */}
         <Route path="/projects" element={
           <ProtectedRoute>
@@ -139,7 +144,7 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
         <Route path="/projects/create" element={
           <ProtectedRoute allowedRoles={['innovator']}>
             <MainLayout>
@@ -147,7 +152,7 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
         <Route path="/projects/:id" element={
           <ProtectedRoute>
             <MainLayout>
@@ -155,7 +160,7 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
         <Route path="/projects/:id/edit" element={
           <ProtectedRoute allowedRoles={['innovator']}>
             <MainLayout>
@@ -163,15 +168,24 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
-        <Route path="/projects/:id/milestones/add" element={
+
+        <Route path="/projects/:projectId/milestones/add" element={
           <ProtectedRoute allowedRoles={['innovator']}>
             <MainLayout>
               <AddMilestone />
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
+        {/* New milestone edit route */}
+        <Route path="/projects/:projectId/milestones/:milestoneId/edit" element={
+          <ProtectedRoute allowedRoles={['innovator', 'admin']}>
+            <MainLayout>
+              <EditMilestone />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
         {/* Messages route */}
         <Route path="/messages" element={
           <ProtectedRoute>
@@ -180,7 +194,7 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
-        
+
         <Route path="/investments" element={
           <ProtectedRoute allowedRoles={['investor']}>
             <MainLayout>
@@ -206,15 +220,80 @@ function App() {
           </ProtectedRoute>
         } />
 
-          <Route path="/wallet" element={
-           <ProtectedRoute allowedRoles={['investor']}>
-              <MainLayout>
-                <Wallet />
-             </MainLayout>
-           </ProtectedRoute>
+        <Route path="/wallet" element={
+          <ProtectedRoute allowedRoles={['investor']}>
+            <MainLayout>
+              <Wallet />
+            </MainLayout>
+          </ProtectedRoute>
         } />
-        
-        {/* Catch all route */}
+
+        {/* Admin Dashboard and related routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/projects" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/projects/:projectId/investments" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminEscrowManagement />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/projects/:projectId/escrow" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminEscrowManagement />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/wallet" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/wallet/transactions" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/users" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/settings" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

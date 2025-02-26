@@ -62,10 +62,10 @@ const MainLayout = ({ children }) => {
 
   // Define base navigation items with roles
   const baseNavigation = [
-    { name: 'Dashboard', path: '/dashboard', icon: <DashboardIcon />, roles: ['investor', 'innovator', 'admin'] },
-    { name: 'Projects', path: '/projects', icon: <BusinessCenterIcon />, roles: ['investor', 'innovator', 'admin'] },
-    { name: 'Wallet', path: '/wallet', icon: <AccountBalanceWalletIcon />, roles: ['investor', 'admin'] },
-    { name: 'Investments', path: '/investments', icon: <AccountBalanceWalletIcon />, roles: ['investor', 'admin'] },
+    { name: 'Dashboard', path: '/dashboard', icon: <DashboardIcon />, roles: ['investor', 'innovator'] },
+    { name: 'Projects', path: '/projects', icon: <BusinessCenterIcon />, roles: ['investor', 'innovator'] },
+    { name: 'Wallet', path: '/wallet', icon: <AccountBalanceWalletIcon />, roles: ['investor'] },
+    { name: 'Investments', path: '/investments', icon: <AccountBalanceWalletIcon />, roles: ['investor'] },
     { name: 'Messages', path: '/messages', icon: <EmailIcon />, roles: ['investor', 'innovator', 'admin'] },
     { name: 'Admin', path: '/admin', icon: <AdminPanelSettingsIcon />, roles: ['admin'] },
   ];
