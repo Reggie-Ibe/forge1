@@ -19,6 +19,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import AddMilestone from './pages/AddMilestone';
 import Messages from './pages/Messages';
 import Profile from './pages/Profile';
+import Wallet from './pages/Wallet';
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -203,6 +204,14 @@ function App() {
               </Container>
             </MainLayout>
           </ProtectedRoute>
+        } />
+
+          <Route path="/wallet" element={
+           <ProtectedRoute allowedRoles={['investor']}>
+              <MainLayout>
+                <Wallet />
+             </MainLayout>
+           </ProtectedRoute>
         } />
         
         {/* Catch all route */}

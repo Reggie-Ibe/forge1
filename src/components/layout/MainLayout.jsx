@@ -63,6 +63,7 @@ const MainLayout = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
     { name: 'Projects', path: '/projects', icon: <BusinessCenterIcon /> },
+    { name: 'Wallet', path: '/wallet', icon: <AccountBalanceWalletIcon /> }, 
     { name: 'Investments', path: '/investments', icon: <AccountBalanceWalletIcon /> },
     { name: 'Messages', path: '/messages', icon: <EmailIcon /> },
   ];
