@@ -70,7 +70,6 @@ const Projects = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -197,13 +196,13 @@ const Projects = () => {
         </Box>
         
         {user?.role === 'innovator' && (
-          <Button 
-            variant="contained" 
-            startIcon={<AddIcon />}
-            onClick={() => setShowCreateModal(true)}
-          >
-            Create Project
-          </Button>
+         <Button 
+         variant="contained" 
+         startIcon={<AddIcon />}
+         onClick={() => navigate('/projects/create')}
+       >
+         Create Project
+       </Button>
         )}
       </Box>
       
@@ -428,43 +427,6 @@ const Projects = () => {
           })}
         </Grid>
       )}
-      
-      {/* Create project modal - to be implemented */}
-      <Dialog open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Project</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Project creation form will be implemented in the next phase. This is a placeholder for the upcoming functionality.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="project-title"
-            label="Project Title"
-            type="text"
-            fullWidth
-            variant="outlined"
-            disabled
-          />
-          <TextField
-            margin="dense"
-            id="project-description"
-            label="Project Description"
-            type="text"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={4}
-            disabled
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowCreateModal(false)}>Cancel</Button>
-          <Button variant="contained" onClick={() => setShowCreateModal(false)} disabled>
-            Create Project
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 };

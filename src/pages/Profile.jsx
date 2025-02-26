@@ -42,22 +42,26 @@ const Profile = () => {
     password: '',
     newPassword: '',
     confirmPassword: '',
+    address: user?.address || '', // New field
+    dateOfBirth: user?.dateOfBirth || '', // New field
   });
+  const [profileImage, setProfileImage] = useState(null); // Profile image state
+  const [previewUrl, setPreviewUrl] = useState(user?.profileImage || ''); // Preview URL for profile image
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [projects, setProjects] = useState([]);
   const [investments, setInvestments] = useState([]);
-  
+
   useEffect(() => {
     fetchUserData();
   }, [user]);
-  
+
   const fetchUserData = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
+
       // Fetch projects if user is an innovator
       if (user.role === 'innovator') {
         const projectsResponse = await fetch(`${apiUrl}/projects?userId=${user.id}`);
@@ -66,13 +70,13 @@ const Profile = () => {
           setProjects(projectsData);
         }
       }
-      
+
       // Fetch investments if user is an investor
       if (user.role === 'investor') {
         const investmentsResponse = await fetch(`${apiUrl}/investments?userId=${user.id}`);
         if (investmentsResponse.ok) {
           const investmentsData = await investmentsResponse.json();
-          
+
           // Fetch project details for each investment
           const investmentsWithProjects = await Promise.all(
             investmentsData.map(async (investment) => {
@@ -84,7 +88,7 @@ const Profile = () => {
               return investment;
             })
           );
-          
+
           setInvestments(investmentsWithProjects);
         }
       }
@@ -92,18 +96,18 @@ const Profile = () => {
       console.error('Error fetching user data:', err);
     }
   };
-  
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear any errors for this field
     if (errors[name]) {
       setErrors((prev) => ({
@@ -112,49 +116,67 @@ const Profile = () => {
       }));
     }
   };
-  
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setProfileImage(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const validateProfileForm = () => {
     const newErrors = {};
-    
+
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const validatePasswordForm = () => {
     const newErrors = {};
-    
+
     if (!formData.password) newErrors.password = 'Current password is required';
     if (!formData.newPassword) newErrors.newPassword = 'New password is required';
-    if (formData.newPassword && formData.newPassword.length < 8) newErrors.newPassword = 'Password must be at least 8 characters';
-    if (formData.newPassword !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    
+    if (formData.newPassword && formData.newPassword.length < 8)
+      newErrors.newPassword = 'Password must be at least 8 characters';
+    if (formData.newPassword !== formData.confirmPassword)
+      newErrors.confirmPassword = 'Passwords do not match';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleProfileUpdate = async () => {
     if (!validateProfileForm()) return;
-    
+
     setLoading(true);
     setError('');
     setSuccess('');
-    
+
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
+
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         bio: formData.bio,
+        address: formData.address, // Include address
+        dateOfBirth: formData.dateOfBirth, // Include date of birth
+        profileImage: previewUrl, // Include profile image URL
       };
-      
+
       const response = await fetch(`${apiUrl}/users/${user.id}`, {
         method: 'PATCH',
         headers: {
@@ -162,14 +184,11 @@ const Profile = () => {
         },
         body: JSON.stringify(userData),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update profile');
       }
-      
-      // Update user in auth context
-      // Note: In a real application, you would update the user in the auth context
-      // For now, we'll just show a success message
+
       setSuccess('Profile updated successfully');
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -178,21 +197,17 @@ const Profile = () => {
       setLoading(false);
     }
   };
-  
+
   const handlePasswordUpdate = async () => {
     if (!validatePasswordForm()) return;
-    
+
     setLoading(true);
     setError('');
     setSuccess('');
-    
+
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
-      // In a real application, you would validate the current password
-      // and update the password securely
-      // For now, we'll simulate it with a mock API call
-      
+
       const response = await fetch(`${apiUrl}/users/${user.id}`, {
         method: 'PATCH',
         headers: {
@@ -202,13 +217,13 @@ const Profile = () => {
           password: formData.newPassword,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update password');
       }
-      
+
       setSuccess('Password updated successfully');
-      
+
       // Clear password fields
       setFormData((prev) => ({
         ...prev,
@@ -223,7 +238,7 @@ const Profile = () => {
       setLoading(false);
     }
   };
-  
+
   // Format currency
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -233,442 +248,307 @@ const Profile = () => {
       maximumFractionDigits: 0,
     }).format(value);
   };
-  
+
   // Calculate total investment amount
   const totalInvestment = investments.reduce((total, investment) => total + investment.amount, 0);
-  
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Grid container spacing={4}>
-        {/* Profile Summary */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-              <Avatar sx={{ width: 100, height: 100, mb: 2, bgcolor: 'primary.main', fontSize: '2rem' }}>
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </Avatar>
-              <Typography variant="h5" gutterBottom>
-                {user?.firstName} {user?.lastName}
-              </Typography>
-              <Chip
-                label={user?.role === 'innovator' ? 'Innovator' : 'Investor'}
-                color="primary"
-                variant="outlined"
-              />
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary">
-                Email
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                {user?.email}
-              </Typography>
-              
-              {user?.phone && (
-                <>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
-                    Phone
-                  </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    {user.phone}
-                  </Typography>
-                </>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      {/* Profile Summary */}
+      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+        <Grid container spacing={3}>
+          {/* Profile Picture Upload Section */}
+          <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                width: 150,
+                height: 150,
+                borderRadius: '50%',
+                border: '1px dashed #ccc',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                overflow: 'hidden',
+                mb: 2,
+                position: 'relative',
+              }}
+            >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Profile"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No Image
+                </Typography>
               )}
-              
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
-                Member Since
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-              </Typography>
             </Box>
-          </Paper>
-          
-          {/* Stats Card */}
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Activity Summary
-            </Typography>
-            
-            {user?.role === 'innovator' ? (
-              <List dense>
-                <ListItem divider>
-                  <ListItemText primary="Total Projects" />
-                  <Typography variant="body1" fontWeight="bold">
-                    {projects.length}
-                  </Typography>
-                </ListItem>
-                <ListItem divider>
-                  <ListItemText primary="Active Projects" />
-                  <Typography variant="body1" fontWeight="bold">
-                    {projects.filter(p => p.status === 'active').length}
-                  </Typography>
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Total Funding Raised" />
-                  <Typography variant="body1" fontWeight="bold">
-                    {formatCurrency(projects.reduce((total, project) => total + project.currentFunding, 0))}
-                  </Typography>
-                </ListItem>
-              </List>
-            ) : (
-              <List dense>
-                <ListItem divider>
-                  <ListItemText primary="Total Investments" />
-                  <Typography variant="body1" fontWeight="bold">
-                    {investments.length}
-                  </Typography>
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Total Amount Invested" />
-                  <Typography variant="body1" fontWeight="bold">
-                    {formatCurrency(totalInvestment)}
-                  </Typography>
-                </ListItem>
-              </List>
-            )}
-          </Paper>
+
+            <Button
+              variant="outlined"
+              component="label"
+              size="small"
+            >
+              Upload Photo
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+            </Button>
+          </Grid>
+
+          {/* Address Field */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+            />
+          </Grid>
+
+          {/* Date of Birth Field */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Date of Birth"
+              name="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
+
+          {/* Basic Info Fields */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              error={!!errors.firstName}
+              helperText={errors.firstName}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              error={!!errors.lastName}
+              helperText={errors.lastName}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              error={!!errors.email}
+              helperText={errors.email}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Bio"
+              name="bio"
+              multiline
+              rows={4}
+              value={formData.bio}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+            />
+          </Grid>
         </Grid>
-        
-        {/* Main Content */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 0 }}>
-            <Tabs value={activeTab} onChange={handleTabChange}>
-              <Tab 
-                label="Account Settings" 
-                icon={<AccountCircleIcon />} 
-                iconPosition="start"
-              />
-              <Tab 
-                label="Security" 
-                icon={<SecurityIcon />} 
-                iconPosition="start"
-              />
-            </Tabs>
-            
-            <Box sx={{ p: 3 }}>
-              {/* Profile Tab */}
-              {activeTab === 0 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Profile Information
-                  </Typography>
-                  
-                  {success && (
-                    <Alert severity="success" sx={{ mb: 3 }}>
-                      {success}
-                    </Alert>
-                  )}
-                  
-                  {error && (
-                    <Alert severity="error" sx={{ mb: 3 }}>
-                      {error}
-                    </Alert>
-                  )}
-                  
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}></Grid>
-                    <TextField
-                        fullWidth
-                        label="First Name"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        error={!!errors.firstName}
-                        helperText={errors.firstName}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="Last Name"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        error={!!errors.lastName}
-                        helperText={errors.lastName}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Email Address"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        error={!!errors.email}
-                        helperText={errors.email}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Phone Number"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        error={!!errors.phone}
-                        helperText={errors.phone}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Bio"
-                        name="bio"
-                        value={formData.bio}
-                        onChange={handleChange}
-                        error={!!errors.bio}
-                        helperText={errors.bio}
-                        disabled={loading}
-                        margin="normal"
-                        multiline
-                        rows={4}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={loading ? <CircularProgress size={24} /> : <SaveIcon />}
-                        onClick={handleProfileUpdate}
-                        disabled={loading}
-                      >
-                        Save Changes
-                      </Button>
-                    </Grid>
-                </Box>
-              )}
-              
-              {/* Security Tab */}
-              {activeTab === 1 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Change Password
-                  </Typography>
-                  
-                  {success && (
-                    <Alert severity="success" sx={{ mb: 3 }}>
-                      {success}
-                    </Alert>
-                  )}
-                  
-                  {error && (
-                    <Alert severity="error" sx={{ mb: 3 }}>
-                      {error}
-                    </Alert>
-                  )}
-                  
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Current Password"
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        error={!!errors.password}
-                        helperText={errors.password}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="New Password"
-                        name="newPassword"
-                        type="password"
-                        value={formData.newPassword}
-                        onChange={handleChange}
-                        error={!!errors.newPassword}
-                        helperText={errors.newPassword}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Confirm New Password"
-                        name="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        error={!!errors.confirmPassword}
-                        helperText={errors.confirmPassword}
-                        disabled={loading}
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={loading ? <CircularProgress size={24} /> : <SaveIcon />}
-                        onClick={handlePasswordUpdate}
-                        disabled={loading}
-                      >
-                        Update Password
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Box>
-              )}
-            </Box>
-          </Paper>
-          
-          {/* Activity section */}
-          <Paper sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              {user?.role === 'innovator' ? 'My Projects' : 'My Investments'}
+      </Paper>
+
+      {/* Tabs */}
+      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} centered>
+          <Tab icon={<AccountCircleIcon />} label="Profile" />
+          <Tab icon={<SecurityIcon />} label="Security" />
+        </Tabs>
+
+        {/* Profile Tab */}
+        {activeTab === 0 && (
+          <>
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Profile Information
             </Typography>
-            
-            {user?.role === 'innovator' ? (
-              // Innovator projects
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {projects.length === 0 ? (
-                  <Grid item xs={12}>
-                    <Typography variant="body1" color="text.secondary">
-                      You haven't created any projects yet.
-                    </Typography>
-                  </Grid>
-                ) : (
-                  projects.map(project => (
-                    <Grid item xs={12} sm={6} key={project.id}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            {project.title}
-                          </Typography>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Chip
-                              label={project.category}
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                            />
-                            <Chip
-                              label={project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                              size="small"
-                              color={
-                                project.status === 'active'
-                                  ? 'success'
-                                  : project.status === 'pending'
-                                  ? 'warning'
-                                  : 'default'
-                              }
-                            />
-                          </Box>
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Funding Progress
-                            </Typography>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="body2">
-                                {formatCurrency(project.currentFunding)}
-                              </Typography>
-                              <Typography variant="body2">
-                                {formatCurrency(project.fundingGoal)}
-                              </Typography>
-                            </Box>
-                            <Box
-                              sx={{
-                                height: 8,
-                                width: '100%',
-                                bgcolor: 'grey.200',
-                                borderRadius: 1,
-                                mt: 0.5,
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  height: '100%',
-                                  width: `${Math.min((project.currentFunding / project.fundingGoal) * 100, 100)}%`,
-                                  bgcolor: 'primary.main',
-                                  borderRadius: 1,
-                                }}
-                              />
-                            </Box>
-                          </Box>
-                          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                              size="small"
-                              href={`/projects/${project.id}`}
-                            >
-                              View Project
-                            </Button>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))
-                )}
-              </Grid>
-            ) : (
-              // Investor investments
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {investments.length === 0 ? (
-                  <Grid item xs={12}>
-                    <Typography variant="body1" color="text.secondary">
-                      You haven't made any investments yet.
-                    </Typography>
-                  </Grid>
-                ) : (
-                  investments.map(investment => (
-                    <Grid item xs={12} sm={6} key={investment.id}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          {investment.project && (
-                            <Typography variant="h6" gutterBottom>
-                              {investment.project.title}
-                            </Typography>
-                          )}
-                          <Typography variant="h5" color="primary" gutterBottom>
-                            {formatCurrency(investment.amount)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Invested on {new Date(investment.createdAt).toLocaleDateString()}
-                          </Typography>
-                          <Chip
-                            label={investment.status.charAt(0).toUpperCase() + investment.status.slice(1)}
-                            size="small"
-                            color="success"
-                            sx={{ mt: 1 }}
-                          />
-                          {investment.project && (
-                            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                              <Button
-                                size="small"
-                                href={`/projects/${investment.projectId}`}
-                              >
-                                View Project
-                              </Button>
-                            </Box>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))
-                )}
-              </Grid>
+            {success && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                {success}
+              </Alert>
             )}
-          </Paper>
-        </Grid>
-      </Grid>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleProfileUpdate}
+              disabled={loading}
+              sx={{ mt: 2 }}
+            >
+              Save Changes
+            </Button>
+          </>
+        )}
+
+        {/* Security Tab */}
+        {activeTab === 1 && (
+          <>
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Change Password
+            </Typography>
+            {success && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                {success}
+              </Alert>
+            )}
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <TextField
+              fullWidth
+              label="Current Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+            <TextField
+              fullWidth
+              label="New Password"
+              name="newPassword"
+              type="password"
+              value={formData.newPassword}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              error={!!errors.newPassword}
+              helperText={errors.newPassword}
+            />
+            <TextField
+              fullWidth
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              disabled={loading}
+              margin="normal"
+              error={!!errors.confirmPassword}
+              helperText={errors.confirmPassword}
+            />
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handlePasswordUpdate}
+              disabled={loading}
+              sx={{ mt: 2 }}
+            >
+              Update Password
+            </Button>
+          </>
+        )}
+      </Paper>
+
+      {/* Activity Section */}
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {user?.role === 'innovator' ? 'My Projects' : 'My Investments'}
+        </Typography>
+        {user?.role === 'innovator' ? (
+          // Innovator Projects
+          projects.length === 0 ? (
+            <Typography variant="body1">You haven't created any projects yet.</Typography>
+          ) : (
+            projects.map((project) => (
+              <Card key={project.id} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Typography variant="h6">{project.title}</Typography>
+                  <Typography variant="body2">
+                    Funding Progress: {formatCurrency(project.currentFunding)} /{' '}
+                    {formatCurrency(project.fundingGoal)}
+                  </Typography>
+                  <Button variant="outlined" size="small" sx={{ mt: 1 }}>
+                    View Project
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )
+        ) : (
+          // Investor Investments
+          investments.length === 0 ? (
+            <Typography variant="body1">You haven't made any investments yet.</Typography>
+          ) : (
+            investments.map((investment) => (
+              <Card key={investment.id} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Typography variant="h6">{investment.project?.title}</Typography>
+                  <Typography variant="body2">
+                    Amount Invested: {formatCurrency(investment.amount)}
+                  </Typography>
+                  <Typography variant="body2">
+                    Invested on: {new Date(investment.createdAt).toLocaleDateString()}
+                  </Typography>
+                  {investment.project && (
+                    <Button variant="outlined" size="small" sx={{ mt: 1 }}>
+                      View Project
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )
+        )}
+      </Paper>
     </Container>
   );
 };

@@ -60,17 +60,20 @@ const MainLayout = ({ children }) => {
     setAnchorEl(null);
   };
 
-  const navigation = [
-    { name: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
-    { name: 'Projects', path: '/projects', icon: <BusinessCenterIcon /> },
-    { name: 'Wallet', path: '/wallet', icon: <AccountBalanceWalletIcon /> }, 
-    { name: 'Investments', path: '/investments', icon: <AccountBalanceWalletIcon /> },
-    { name: 'Messages', path: '/messages', icon: <EmailIcon /> },
+  // Define base navigation items with roles
+  const baseNavigation = [
+    { name: 'Dashboard', path: '/dashboard', icon: <DashboardIcon />, roles: ['investor', 'innovator', 'admin'] },
+    { name: 'Projects', path: '/projects', icon: <BusinessCenterIcon />, roles: ['investor', 'innovator', 'admin'] },
+    { name: 'Wallet', path: '/wallet', icon: <AccountBalanceWalletIcon />, roles: ['investor', 'admin'] },
+    { name: 'Investments', path: '/investments', icon: <AccountBalanceWalletIcon />, roles: ['investor', 'admin'] },
+    { name: 'Messages', path: '/messages', icon: <EmailIcon />, roles: ['investor', 'innovator', 'admin'] },
+    { name: 'Admin', path: '/admin', icon: <AdminPanelSettingsIcon />, roles: ['admin'] },
   ];
 
-  if (user?.role === 'admin') {
-    navigation.push({ name: 'Admin', path: '/admin', icon: <AdminPanelSettingsIcon /> });
-  }
+  // Filter navigation based on user role
+  const filteredNavigation = baseNavigation.filter((item) => 
+    item.roles.includes(user?.role)
+  );
 
   const drawer = (
     <div>
@@ -81,7 +84,7 @@ const MainLayout = ({ children }) => {
       </Toolbar>
       <Divider />
       <List>
-        {navigation.map((item) => (
+        {filteredNavigation.map((item) => (
           <ListItem key={item.name} disablePadding>
             <ListItemButton
               component={Link}
@@ -125,7 +128,7 @@ const MainLayout = ({ children }) => {
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
           >
-            {navigation.find(item => item.path === location.pathname)?.name || 'Dashboard'}
+            {filteredNavigation.find(item => item.path === location.pathname)?.name || 'Dashboard'}
           </Typography>
           
           {/* User profile button */}

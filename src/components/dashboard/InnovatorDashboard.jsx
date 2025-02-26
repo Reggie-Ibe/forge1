@@ -319,13 +319,13 @@ const InnovatorDashboard = () => {
           </Grid>
           <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
             <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/projects/create')}
-            >
-              Create New Project
-            </Button>
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/projects/create')}
+          >
+            Create New Project
+          </Button>
           </Grid>
         </Grid>
       </Paper>
