@@ -1,16 +1,40 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-  BarChart, Bar, PieChart, Pie, Cell 
-} from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
+// Material UI components
+import {
+  Box,
+  Typography,
+  Container,
+  Grid,
+  Paper,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
+  CircularProgress,
+  Button,
+  Alert
+} from '@mui/material';
+
+// Recharts for data visualization
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell
+} from 'recharts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState('overview');
+  const [activeView, setActiveView] = useState(0);
   const [fundingTrend, setFundingTrend] = useState([]);
   const [milestoneMetrics, setMilestoneMetrics] = useState({ completed: 0, inProgress: 0, pending: 0, total: 0 });
   const [sdgImpact, setSdgImpact] = useState([]);
@@ -93,270 +117,296 @@ const Dashboard = () => {
     }).format(value);
   };
 
+  const handleTabChange = (event, newValue) => {
+    setActiveView(newValue);
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+        <Typography variant="body1" sx={{ ml: 2 }}>
+          Loading dashboard...
+        </Typography>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="text-center bg-white p-8 shadow-md rounded-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h2 className="text-xl font-bold mt-4">Error</h2>
-          <p className="mt-2 text-gray-600">{error}</p>
-          <button 
-            onClick={fetchDashboardData} 
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Paper sx={{ p: 4, maxWidth: 500, width: '100%' }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          <Button variant="contained" onClick={fetchDashboardData}>
             Try Again
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Paper>
+      </Box>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        </div>
-      </header>
-      
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* View Tabs */}
-        <div className="mb-6 flex space-x-2 overflow-x-auto">
-          {['overview', 'funding', 'milestones', 'impact'].map((view) => (
-            <button
-              key={view}
-              onClick={() => setActiveView(view)}
-              className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
-                activeView === view 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              } shadow-sm`}
-            >
-              {view.charAt(0).toUpperCase() + view.slice(1)}
-            </button>
-          ))}
-        </div>
-        
-        {/* Welcome Card */}
-        {activeView === 'overview' && (
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              Welcome back, {user?.firstName || 'User'}!
-            </h2>
-            <p className="text-gray-600">
-              Here's an overview of your {user?.role === 'investor' ? 'investments' : 'projects'} performance.
-            </p>
-          </div>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Dashboard
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Welcome back, {user?.firstName || 'User'}! Here's an overview of your {user?.role === 'investor' ? 'investments' : 'projects'}.
+        </Typography>
+      </Box>
+
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeView} onChange={handleTabChange} aria-label="dashboard views">
+          <Tab label="Overview" />
+          <Tab label="Funding" />
+          <Tab label="Milestones" />
+          <Tab label="Impact" />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      <Paper sx={{ p: 3 }}>
+        {/* Overview Tab */}
+        {activeView === 0 && (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Funding Overview
+            </Typography>
+            <Box sx={{ height: 400, mt: 2 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={fundingTrend}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value / 1000}k`}
+                    domain={[0, 'dataMax + 100000']}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [formatCurrency(value), 'Funding']}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="funding" 
+                    stroke="#3f51b5" 
+                    strokeWidth={2}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Box>
+
+            <Grid container spacing={3} sx={{ mt: 2 }}>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ bgcolor: '#e3f2fd' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: '#1976d2' }}>
+                      Total Funding
+                    </Typography>
+                    <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 'bold', color: '#0d47a1' }}>
+                      {formatCurrency(fundingTrend.reduce((acc, item) => acc + item.funding, 0))}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ bgcolor: '#e8f5e9' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: '#2e7d32' }}>
+                      Total Projects
+                    </Typography>
+                    <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 'bold', color: '#1b5e20' }}>
+                      {projects.length}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card sx={{ bgcolor: '#f3e5f5' }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: '#7b1fa2' }}>
+                      Milestone Completion
+                    </Typography>
+                    <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 'bold', color: '#4a148c' }}>
+                      {milestoneMetrics.completed}/{milestoneMetrics.total}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
         )}
-        
-        {/* Content based on active view */}
-        <div className="bg-white shadow rounded-lg p-6">
-          {/* Overview */}
-          {activeView === 'overview' && (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Funding Overview</h2>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={fundingTrend}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis 
-                      tickFormatter={(value) => `$${value / 1000}k`}
-                      domain={[0, 'dataMax + 100000']}
-                    />
-                    <Tooltip 
-                      formatter={(value) => [formatCurrency(value), 'Funding']}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="funding" 
-                      stroke="#3B82F6" 
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-          
-          {/* Funding */}
-          {activeView === 'funding' && (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Monthly Funding</h2>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={fundingTrend}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis 
-                      tickFormatter={(value) => `$${value / 1000}k`}
-                    />
-                    <Tooltip 
-                      formatter={(value) => [formatCurrency(value), 'Funding']}
-                    />
-                    <Legend />
-                    <Bar dataKey="funding" fill="#10B981" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="text-blue-800 text-lg font-medium mb-2">Total Funding</h3>
-                  <p className="text-blue-900 text-2xl font-bold">
-                    {formatCurrency(fundingTrend.reduce((acc, item) => acc + item.funding, 0))}
-                  </p>
-                </div>
-                
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="text-green-800 text-lg font-medium mb-2">Average Monthly</h3>
-                  <p className="text-green-900 text-2xl font-bold">
-                    {formatCurrency(fundingTrend.reduce((acc, item) => acc + item.funding, 0) / fundingTrend.length)}
-                  </p>
-                </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h3 className="text-purple-800 text-lg font-medium mb-2">Growth Rate</h3>
-                  <p className="text-purple-900 text-2xl font-bold">
-                    {fundingTrend.length > 1 ? 
-                      `${(((fundingTrend[fundingTrend.length - 1].funding / fundingTrend[0].funding) - 1) * 100).toFixed(1)}%` : 
-                      'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Milestones */}
-          {activeView === 'milestones' && (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Milestone Completion</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Total</p>
-                      <p className="text-xl font-bold text-gray-900">{milestoneMetrics.total}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Completed</p>
-                      <p className="text-xl font-bold text-gray-900">{milestoneMetrics.completed}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">In Progress</p>
-                      <p className="text-xl font-bold text-gray-900">{milestoneMetrics.inProgress}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Pending</p>
-                      <p className="text-xl font-bold text-gray-900">{milestoneMetrics.pending}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="overflow-hidden bg-white shadow sm:rounded-lg mt-6">
-                <div className="px-4 py-5 sm:px-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Updates</h3>
-                </div>
-                <div className="border-t border-gray-200">
-                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500">Prototype Development</dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                        In Progress
-                      </span>
-                      <p className="mt-1">Engineering team is finalizing the first working prototype. Expected completion next week.</p>
-                    </dd>
-                  </div>
-                  <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500">Patent Application</dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                        Pending
-                      </span>
-                      <p className="mt-1">Legal team is preparing documentation for patent application.</p>
-                    </dd>
-                  </div>
-                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500">Market Research</dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                        Completed
-                      </span>
-                      <p className="mt-1">Initial market research and competitive analysis has been completed.</p>
-                    </dd>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Impact */}
-          {activeView === 'impact' && (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">SDG Impact</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="h-80">
+
+        {/* Funding Tab */}
+        {activeView === 1 && (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Monthly Funding
+            </Typography>
+            <Box sx={{ height: 400, mt: 2 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={fundingTrend}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value / 1000}k`}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [formatCurrency(value), 'Funding']}
+                  />
+                  <Legend />
+                  <Bar dataKey="funding" fill="#2e7d32" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+
+            <Grid container spacing={3} sx={{ mt: 2 }}>
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" color="primary">
+                      Total Funding
+                    </Typography>
+                    <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 'bold' }}>
+                      {formatCurrency(fundingTrend.reduce((acc, item) => acc + item.funding, 0))}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" color="primary">
+                      Average Monthly
+                    </Typography>
+                    <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 'bold' }}>
+                      {formatCurrency(fundingTrend.reduce((acc, item) => acc + item.funding, 0) / fundingTrend.length)}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" color="primary">
+                      Growth Rate
+                    </Typography>
+                    <Typography variant="h4" component="div" sx={{ mt: 1, fontWeight: 'bold' }}>
+                      {fundingTrend.length > 1 ? 
+                        `${(((fundingTrend[fundingTrend.length - 1].funding / fundingTrend[0].funding) - 1) * 100).toFixed(1)}%` : 
+                        'N/A'}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+
+        {/* Milestones Tab */}
+        {activeView === 2 && (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Milestone Completion
+            </Typography>
+            
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={6} sm={3}>
+                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Total
+                  </Typography>
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
+                    {milestoneMetrics.total}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#e8f5e9' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Completed
+                  </Typography>
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                    {milestoneMetrics.completed}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#fff8e1' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    In Progress
+                  </Typography>
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: '#f57f17' }}>
+                    {milestoneMetrics.inProgress}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: '#ffebee' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Pending
+                  </Typography>
+                  <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: '#c62828' }}>
+                    {milestoneMetrics.pending}
+                  </Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+            
+            <Card>
+              <CardHeader title="Recent Updates" />
+              <Divider />
+              <List>
+                <ListItem divider>
+                  <ListItemText 
+                    primary="Prototype Development" 
+                    secondary="Engineering team is finalizing the first working prototype. Expected completion next week."
+                    primaryTypographyProps={{ fontWeight: 'medium' }}
+                  />
+                  <Chip label="In Progress" color="warning" size="small" />
+                </ListItem>
+                <ListItem divider>
+                  <ListItemText 
+                    primary="Patent Application" 
+                    secondary="Legal team is preparing documentation for patent application."
+                    primaryTypographyProps={{ fontWeight: 'medium' }}
+                  />
+                  <Chip label="Pending" color="error" size="small" />
+                </ListItem>
+                <ListItem>
+                  <ListItemText 
+                    primary="Market Research" 
+                    secondary="Initial market research and competitive analysis has been completed."
+                    primaryTypographyProps={{ fontWeight: 'medium' }}
+                  />
+                  <Chip label="Completed" color="success" size="small" />
+                </ListItem>
+              </List>
+            </Card>
+          </Box>
+        )}
+
+        {/* Impact Tab */}
+        {activeView === 3 && (
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              SDG Impact
+            </Typography>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -364,7 +414,7 @@ const Dashboard = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        outerRadius={80}
+                        outerRadius={100}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         dataKey="value"
                       >
@@ -375,52 +425,64 @@ const Dashboard = () => {
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
-                
-                <div>
-                  <h3 className="text-md font-medium mb-4">Impact Breakdown</h3>
-                  <div className="space-y-4">
-                    {sdgImpact.map((sdg, index) => (
-                      <div key={index} className="flex items-center">
-                        <div 
-                          className="w-4 h-4 mr-2" 
-                          style={{ backgroundColor: sdg.color }}
-                        ></div>
-                        <div className="flex-1">
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700">{sdg.name}</span>
-                            <span className="text-sm font-medium text-gray-700">{sdg.value} projects</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="h-2 rounded-full" 
-                              style={{ 
-                                width: `${(sdg.value / sdgImpact.reduce((acc, item) => acc + item.value, 0)) * 100}%`,
-                                backgroundColor: sdg.color 
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                </Box>
+              </Grid>
               
-              <div className="mt-8">
-                <h3 className="text-md font-medium mb-4">Impact Stories</h3>
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                  <p className="text-green-700 font-medium">Project Spotlight: Clean Water Initiative</p>
-                  <p className="text-green-600 mt-2">
-                    Our clean water project has successfully provided access to clean drinking water for over 5,000 people in rural communities, contributing directly to SDG 6 (Clean Water and Sanitation).
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Impact Breakdown
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  {sdgImpact.map((sdg, index) => (
+                    <Box key={index} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Box 
+                            sx={{ 
+                              width: 12, 
+                              height: 12, 
+                              borderRadius: '50%', 
+                              bgcolor: sdg.color, 
+                              mr: 1 
+                            }} 
+                          />
+                          <Typography variant="body2">{sdg.name}</Typography>
+                        </Box>
+                        <Typography variant="body2">{sdg.value} projects</Typography>
+                      </Box>
+                      <Box sx={{ width: '100%', bgcolor: '#e0e0e0', height: 8, borderRadius: 4 }}>
+                        <Box 
+                          sx={{ 
+                            height: '100%', 
+                            borderRadius: 4,
+                            width: `${(sdg.value / sdgImpact.reduce((acc, item) => acc + item.value, 0)) * 100}%`,
+                            bgcolor: sdg.color 
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Grid>
+            </Grid>
+            
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Impact Stories
+              </Typography>
+              <Alert severity="success" sx={{ mt: 1 }}>
+                <Typography variant="subtitle2">
+                  Project Spotlight: Clean Water Initiative
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Our clean water project has successfully provided access to clean drinking water for over 5,000 people in rural communities, contributing directly to SDG 6 (Clean Water and Sanitation).
+                </Typography>
+              </Alert>
+            </Box>
+          </Box>
+        )}
+      </Paper>
+    </Container>
   );
 };
 

@@ -2,6 +2,31 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+// Material UI components
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Alert,
+  Divider,
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  FormHelperText,
+  CircularProgress,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
+} from '@mui/material';
+
+// Material UI icons
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import LoginIcon from '@mui/icons-material/Login';
+
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -53,6 +78,10 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real app, this would make an actual API call
       navigate('/login', { state: { message: 'Registration successful! Check your email for verification instructions.' } });
     } catch (error) {
       console.error('Registration error:', error);
@@ -63,131 +92,178 @@ const Register = () => {
   };
   
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="bg-white p-8 shadow-md rounded max-w-md w-full">
-        <h2 className="text-center text-xl font-bold mb-6">Create an Account</h2>
-        
-        {submitError && (
-          <div className="bg-red-50 text-red-700 p-3 rounded mb-4">
-            {submitError}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input 
-              type="text" 
-              name="firstName" 
-              placeholder="First Name" 
-              value={formData.firstName}
-              onChange={handleChange} 
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            />
-            {errors.firstName && (
-              <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-            )}
-          </div>
+    <Container component="main" maxWidth="sm">
+      <Box
+        sx={{
+          marginTop: 8,
+          marginBottom: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper elevation={3} sx={{ p: 4, width: '100%', borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+            <PersonAddIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography component="h1" variant="h5">
+              Create your account
+            </Typography>
+          </Box>
           
-          <div>
-            <input 
-              type="text" 
-              name="lastName" 
-              placeholder="Last Name" 
-              value={formData.lastName}
-              onChange={handleChange} 
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            />
-            {errors.lastName && (
-              <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
-            )}
-          </div>
-          
-          <div>
-            <input 
-              type="email" 
-              name="email" 
-              placeholder="Email" 
-              value={formData.email}
-              onChange={handleChange} 
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-            )}
-          </div>
-          
-          <div>
-            <input 
-              type="password" 
-              name="password" 
-              placeholder="Password" 
-              value={formData.password}
-              onChange={handleChange} 
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-            )}
-          </div>
-          
-          <div>
-            <input 
-              type="password" 
-              name="confirmPassword" 
-              placeholder="Confirm Password" 
-              value={formData.confirmPassword}
-              onChange={handleChange} 
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            />
-            {errors.confirmPassword && (
-              <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
-            )}
-          </div>
-          
-          <div>
-            <select 
-              name="role" 
-              value={formData.role}
-              onChange={handleChange} 
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            >
-              <option value="innovator">Innovator</option>
-              <option value="investor">Investor</option>
-            </select>
-          </div>
-          
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="acceptTerms"
-              checked={formData.acceptTerms}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
-              I accept the Terms and Conditions
-            </label>
-          </div>
-          {errors.acceptTerms && (
-            <p className="text-red-500 text-xs">{errors.acceptTerms}</p>
+          {submitError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {submitError}
+            </Alert>
           )}
           
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            {isSubmitting ? 'Registering...' : 'Register'}
-          </button>
-          
-          <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">
-              Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
-            </p>
-          </div>
-        </form>
-      </div>
-    </div>
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  autoComplete="given-name"
+                  name="firstName"
+                  required
+                  fullWidth
+                  id="firstName"
+                  label="First Name"
+                  autoFocus
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  error={!!errors.firstName}
+                  helperText={errors.firstName}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  id="lastName"
+                  label="Last Name"
+                  name="lastName"
+                  autoComplete="family-name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  error={!!errors.lastName}
+                  helperText={errors.lastName}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  id="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel id="role-label">I am a(n)</InputLabel>
+                  <Select
+                    labelId="role-label"
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    label="I am a(n)"
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="innovator">Innovator</MenuItem>
+                    <MenuItem value="investor">Investor</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="acceptTerms"
+                      checked={formData.acceptTerms}
+                      onChange={handleChange}
+                      color="primary"
+                    />
+                  }
+                  label="I accept the Terms and Conditions"
+                />
+                {errors.acceptTerms && (
+                  <FormHelperText error>{errors.acceptTerms}</FormHelperText>
+                )}
+              </Grid>
+            </Grid>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <PersonAddIcon />}
+              disabled={isSubmitting}
+              sx={{ mt: 3, mb: 2 }}
+            >
+              {isSubmitting ? 'Creating account...' : 'Create Account'}
+            </Button>
+            
+            <Divider sx={{ my: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                or
+              </Typography>
+            </Divider>
+            
+            <Grid container justifyContent="center">
+              <Grid item>
+                <Link to="/login" style={{ textDecoration: 'none' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<LoginIcon />}
+                  >
+                    Already have an account? Sign in
+                  </Button>
+                </Link>
+              </Grid>
+            </Grid>
+          </Box>
+        </Paper>
+        
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 5 }}>
+          {'© '}
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            InnoCap Forge
+          </Link>{' '}
+          {new Date().getFullYear()}
+        </Typography>
+      </Box>
+    </Container>
   );
 };
 
