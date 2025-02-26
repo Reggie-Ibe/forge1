@@ -7,6 +7,10 @@
         "email": "john@example.com",
         "password": "password123",
         "role": "innovator",
+        "address": "123 Innovation Street, Tech City, TC 10101",
+        "phone": "+1 (555) 123-4567",
+        "bio": "Experienced entrepreneur with a focus on sustainable technologies.",
+        "profileImage": "/uploads/profiles/john-doe.jpg",
         "profileCompleted": true,
         "createdAt": "2023-08-10T14:23:45.000Z"
       },
@@ -17,22 +21,80 @@
         "email": "jane@example.com",
         "password": "password123",
         "role": "investor",
+        "address": "456 Capital Avenue, Finance District, FD 20202",
+        "phone": "+1 (555) 987-6543",
+        "bio": "Impact investor with 10+ years of experience in CleanTech and HealthTech sectors.",
+        "profileImage": "/uploads/profiles/jane-smith.jpg",
+        "walletBalance": 250000,
         "profileCompleted": true,
         "createdAt": "2023-08-11T09:15:30.000Z"
+      },
+      {
+        "id": 3,
+        "firstName": "Admin",
+        "lastName": "User",
+        "email": "admin@example.com",
+        "password": "adminpass123",
+        "role": "admin",
+        "address": "789 Admin Road, Control Center, CC 30303",
+        "phone": "+1 (555) 456-7890",
+        "profileImage": "/uploads/profiles/admin-user.jpg",
+        "profileCompleted": true,
+        "createdAt": "2023-08-01T10:00:00.000Z"
       }
     ],
     "projects": [
       {
         "id": 1,
         "userId": 1,
-        "title": "Renewable Energy Solution",
-        "description": "A breakthrough technology to harness solar energy more efficiently.",
-        "category": "CleanTech",
-        "fundingGoal": 500000,
-        "currentFunding": 325000,
+        "title": "Clean Water Initiative",
+        "description": "Water purification systems for developing regions",
+        "category": "Water Technology",
+        "fundingGoal": 150000,
+        "currentFunding": 82500,
         "status": "active",
+        "pendingDeletion": false,
         "createdAt": "2023-08-15T10:00:00.000Z",
-        "sdgs": [7, 13]
+        "documents": [
+          {
+            "id": 1,
+            "name": "Project Pitch Deck",
+            "fileUrl": "/uploads/projects/clean-water-pitch.pdf",
+            "uploadedAt": "2023-08-15T10:30:00.000Z"
+          },
+          {
+            "id": 2,
+            "name": "Technical Specifications",
+            "fileUrl": "/uploads/projects/clean-water-specs.pdf",
+            "uploadedAt": "2023-08-16T14:45:00.000Z"
+          }
+        ],
+        "sdgs": [6, 3],
+        "timeline": "12 months implementation plan with 4 key milestones",
+        "impact": "Provide clean water access to 10,000 people in rural communities"
+      },
+      {
+        "id": 2,
+        "userId": 1,
+        "title": "Sustainable Agriculture Platform",
+        "description": "Digital platform connecting small-scale farmers with sustainable practices and markets.",
+        "category": "AgTech",
+        "fundingGoal": 250000,
+        "currentFunding": 125000,
+        "status": "active",
+        "pendingDeletion": false,
+        "createdAt": "2023-09-01T14:30:00.000Z",
+        "documents": [
+          {
+            "id": 3,
+            "name": "Project Pitch Deck",
+            "fileUrl": "/uploads/projects/agtech-pitch.pdf",
+            "uploadedAt": "2023-09-01T15:00:00.000Z"
+          }
+        ],
+        "sdgs": [2, 12],
+        "timeline": "18 months development and launch schedule",
+        "impact": "Support 500 farmers and reduce food waste by 30% in target communities"
       }
     ],
     "investments": [
@@ -40,9 +102,85 @@
         "id": 1,
         "userId": 2,
         "projectId": 1,
-        "amount": 250000,
+        "amount": 75000,
         "status": "completed",
+        "disbursementSchedule": [
+          {
+            "phase": "Initial Release",
+            "percentage": 25,
+            "amount": 18750,
+            "released": true,
+            "releaseDate": "2023-08-20T14:30:00.000Z",
+            "condition": "Upon project approval"
+          },
+          {
+            "phase": "First Milestone",
+            "percentage": 25,
+            "amount": 18750,
+            "released": true,
+            "releaseDate": "2023-10-15T09:45:00.000Z",
+            "condition": "Upon prototype completion"
+          },
+          {
+            "phase": "50% Milestone",
+            "percentage": 25,
+            "amount": 18750,
+            "released": true,
+            "releaseDate": "2023-12-05T11:20:00.000Z",
+            "condition": "Upon field testing completion"
+          },
+          {
+            "phase": "Final Release",
+            "percentage": 25,
+            "amount": 18750,
+            "released": true,
+            "releaseDate": "2024-02-10T16:15:00.000Z",
+            "condition": "Upon project completion"
+          }
+        ],
+        "note": "Supporting innovative water purification technology",
         "createdAt": "2023-08-18T14:30:00.000Z"
+      },
+      {
+        "id": 2,
+        "userId": 2,
+        "projectId": 2,
+        "amount": 125000,
+        "status": "completed",
+        "disbursementSchedule": [
+          {
+            "phase": "Initial Release",
+            "percentage": 25,
+            "amount": 31250,
+            "released": true,
+            "releaseDate": "2023-09-05T10:15:00.000Z",
+            "condition": "Upon project approval"
+          },
+          {
+            "phase": "First Milestone",
+            "percentage": 25,
+            "amount": 31250,
+            "released": true,
+            "releaseDate": "2023-10-20T14:30:00.000Z",
+            "condition": "Upon MVP development"
+          },
+          {
+            "phase": "50% Milestone",
+            "percentage": 25,
+            "amount": 31250,
+            "released": false,
+            "condition": "Upon beta platform launch"
+          },
+          {
+            "phase": "Final Release",
+            "percentage": 25,
+            "amount": 31250,
+            "released": false,
+            "condition": "Upon full platform launch"
+          }
+        ],
+        "note": "Strategic investment in agricultural technology",
+        "createdAt": "2023-09-05T10:15:00.000Z"
       }
     ],
     "milestones": [
@@ -50,25 +188,198 @@
         "id": 1,
         "projectId": 1,
         "title": "Prototype Development",
-        "description": "Complete the first working prototype",
+        "description": "Complete working prototype of water filter",
         "dueDate": "2023-10-30T00:00:00.000Z",
-        "status": "inProgress"
+        "completedDate": "2023-10-28T00:00:00.000Z",
+        "status": "completed",
+        "adminApproved": true,
+        "approvedBy": 3,
+        "approvedDate": "2023-10-29T00:00:00.000Z",
+        "documents": [
+          {
+            "id": 1,
+            "name": "Prototype Specifications",
+            "fileUrl": "/uploads/milestones/prototype-specs.pdf",
+            "uploadedAt": "2023-10-28T14:30:00.000Z"
+          }
+        ]
       },
       {
         "id": 2,
         "projectId": 1,
-        "title": "Patent Application",
-        "description": "Submit patent application for the technology",
-        "dueDate": "2023-11-15T00:00:00.000Z",
-        "status": "pending"
+        "title": "Field Testing",
+        "description": "Field tests in 3 target communities",
+        "dueDate": "2023-12-15T00:00:00.000Z",
+        "completedDate": "2023-12-05T00:00:00.000Z",
+        "status": "completed",
+        "adminApproved": true,
+        "approvedBy": 3,
+        "approvedDate": "2023-12-07T00:00:00.000Z",
+        "documents": [
+          {
+            "id": 2,
+            "name": "Field Test Results",
+            "fileUrl": "/uploads/milestones/field-test-results.pdf",
+            "uploadedAt": "2023-12-05T16:45:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "projectId": 1,
+        "title": "Production Setup",
+        "description": "Setup manufacturing facilities",
+        "dueDate": "2024-02-28T00:00:00.000Z",
+        "completedDate": "2024-02-10T00:00:00.000Z",
+        "status": "completed",
+        "adminApproved": true,
+        "approvedBy": 3,
+        "approvedDate": "2024-02-12T00:00:00.000Z",
+        "documents": [
+          {
+            "id": 3,
+            "name": "Production Facility Photos",
+            "fileUrl": "/uploads/milestones/production-facility.pdf",
+            "uploadedAt": "2024-02-10T12:30:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "projectId": 1,
+        "title": "Distribution Network",
+        "description": "Establish distribution channels",
+        "dueDate": "2024-04-30T00:00:00.000Z",
+        "status": "inProgress"
+      },
+      {
+        "id": 5,
+        "projectId": 2,
+        "title": "MVP Development",
+        "description": "Build minimum viable product platform",
+        "dueDate": "2023-10-15T00:00:00.000Z",
+        "completedDate": "2023-10-20T00:00:00.000Z",
+        "status": "completed",
+        "adminApproved": true,
+        "approvedBy": 3,
+        "approvedDate": "2023-10-22T00:00:00.000Z"
+      },
+      {
+        "id": 6,
+        "projectId": 2,
+        "title": "Beta Launch",
+        "description": "Launch beta version to select farmers",
+        "dueDate": "2023-12-31T00:00:00.000Z",
+        "status": "inProgress"
       }
     ],
+    "syndicates": [
+      {
+        "id": 1,
+        "name": "Impact Tech Collective",
+        "description": "A group focused on high-impact technology investments",
+        "leadInvestorId": 2,
+        "members": [2, 4, 5],
+        "createdAt": "2023-09-01T10:00:00.000Z"
+      }
+    ],
+    "syndicateInvestments": [
+      {
+        "id": 1,
+        "syndicateId": 1,
+        "projectId": 2,
+        "amount": 100000,
+        "status": "completed",
+        "createdAt": "2023-09-15T14:30:00.000Z",
+        "contributions": [
+          {
+            "userId": 2,
+            "amount": 50000
+          },
+          {
+            "userId": 4,
+            "amount": 30000
+          },
+          {
+            "userId": 5,
+            "amount": 20000
+          }
+        ]
+      }
+    ],
+    "walletTransactions": [
+      {
+        "id": 1,
+        "userId": 2,
+        "type": "deposit",
+        "amount": 150000,
+        "status": "completed",
+        "paymentMethod": "bank_transfer",
+        "paymentProof": "/uploads/payments/transfer-receipt-1.pdf",
+        "createdAt": "2023-08-05T14:30:00.000Z",
+        "approvedBy": 3,
+        "approvedAt": "2023-08-06T10:15:00.000Z"
+      },
+      {
+        "id": 2,
+        "userId": 2,
+        "type": "deposit",
+        "amount": 100000,
+        "status": "completed",
+        "paymentMethod": "crypto",
+        "paymentProof": "/uploads/payments/crypto-receipt-1.pdf",
+        "transactionHash": "0x1234567890abcdef1234567890abcdef",
+        "createdAt": "2023-09-01T11:45:00.000Z",
+        "approvedBy": 3,
+        "approvedAt": "2023-09-01T15:30:00.000Z"
+      },
+      {
+        "id": 3,
+        "userId": 2,
+        "type": "investment",
+        "amount": -75000,
+        "projectId": 1,
+        "status": "completed",
+        "createdAt": "2023-08-18T14:30:00.000Z"
+      },
+      {
+        "id": 4,
+        "userId": 2,
+        "type": "investment",
+        "amount": -25000,
+        "projectId": 2,
+        "status": "completed",
+        "createdAt": "2023-09-05T10:15:00.000Z"
+      }
+    ],
+    "systemSettings": {
+      "paymentMethods": {
+        "bankTransfer": {
+          "enabled": true,
+          "accountName": "InnoCap Forge Ltd.",
+          "accountNumber": "1234567890",
+          "bankName": "Global Innovation Bank",
+          "swiftCode": "GIBIUS123",
+          "instructions": "Please include your user ID in the reference field."
+        },
+        "crypto": {
+          "enabled": true,
+          "acceptedCurrencies": ["BTC", "ETH", "USDC"],
+          "walletAddresses": {
+            "BTC": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+            "ETH": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+            "USDC": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+          },
+          "instructions": "After sending the crypto payment, please upload a screenshot of the transaction."
+        }
+      }
+    },
     "messages": [
       {
         "id": 1,
         "senderId": 2,
         "receiverId": 1,
-        "content": "I'm interested in learning more about your project.",
+        "content": "I'm interested in learning more about your Clean Water Initiative project.",
         "createdAt": "2023-08-20T09:45:00.000Z",
         "read": true
       },
@@ -76,9 +387,17 @@
         "id": 2,
         "senderId": 1,
         "receiverId": 2,
-        "content": "Thank you for your interest! Would you like to schedule a call?",
+        "content": "Thank you for your interest! I'd be happy to provide more details. Would you like to schedule a call?",
         "createdAt": "2023-08-20T11:20:00.000Z",
-        "read": false
+        "read": true
+      },
+      {
+        "id": 3,
+        "senderId": 2,
+        "receiverId": 1,
+        "content": "That would be great. How about tomorrow at 2 PM?",
+        "createdAt": "2023-08-20T13:15:00.000Z",
+        "read": true
       }
     ]
   }

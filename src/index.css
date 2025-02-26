@@ -48,7 +48,6 @@ body {
 }
 
 /* src/index.css */
-/* No need for Tailwind imports now that we're using Material UI */
 
 /* Only keep minimal custom styles needed */
 body {
@@ -63,4 +62,3 @@ a {
   text-decoration: none;
 }
 
-/* Remove all Tailwind utilities - they're not needed with Material UI */
