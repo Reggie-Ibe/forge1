@@ -38,7 +38,7 @@ function Login() {
     try {
       const result = await login(email, password);
       if (result.success) {
-        navigate('/dashboard');
+        navigate('/redirect'); // Use the role-based redirect route
       } else {
         setError(result.message);
       }

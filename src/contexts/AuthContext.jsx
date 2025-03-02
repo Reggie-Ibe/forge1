@@ -27,32 +27,32 @@ export const AuthProvider = ({ children }) => {
   }, []);
   
   // Login function
-  const login = async (email, password) => {
-    try {
-      // In a real app, this would be an API call
-      // For testing purposes, use hardcoded credentials or JSON server
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/users?email=${email}`);
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      
-      const users = await response.json();
-      
-      if (users.length > 0 && users[0].password === password) {
-        // Remove the password from the user object before storing
-        const { password: _, ...userWithoutPassword } = users[0];
-        setUser(userWithoutPassword);
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        return { success: true };
-      }
-      return { success: false, message: 'Invalid email or password' };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, message: 'Login failed. Please try again later.' };
+const login = async (email, password) => {
+  try {
+    // In a real app, this would be an API call
+    // For testing purposes, use hardcoded credentials or JSON server
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/users?email=${email}`);
+    
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
     }
-  };
+    
+    const users = await response.json();
+    
+    if (users.length > 0 && users[0].password === password) {
+      // Remove the password from the user object before storing
+      const { password: _, ...userWithoutPassword } = users[0];
+      setUser(userWithoutPassword);
+      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      return { success: true };
+    }
+    return { success: false, message: 'Invalid email or password' };
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, message: 'Login failed. Please try again later.' };
+  }
+};
   
   // Logout function
   const logout = () => {

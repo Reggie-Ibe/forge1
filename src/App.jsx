@@ -1,4 +1,4 @@
-// src/App.jsx with milestone edit route and admin routes
+// src/App.jsx with escrow management routes
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 
@@ -17,7 +17,8 @@ import CreateProject from './pages/CreateProject';
 import EditProject from './pages/EditProject';
 import ProjectDetail from './pages/ProjectDetail';
 import AddMilestone from './pages/AddMilestone';
-import EditMilestone from './pages/EditMilestone'; // Milestone edit route
+import EditMilestone from './pages/EditMilestone';
+import MilestoneVerification from './pages/MilestoneVerification';
 import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Wallet from './pages/Wallet';
@@ -177,11 +178,19 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* New milestone edit route */}
         <Route path="/projects/:projectId/milestones/:milestoneId/edit" element={
           <ProtectedRoute allowedRoles={['innovator', 'admin']}>
             <MainLayout>
               <EditMilestone />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* New milestone verification route */}
+        <Route path="/projects/:projectId/milestones/:milestoneId/verify" element={
+          <ProtectedRoute allowedRoles={['investor', 'admin']}>
+            <MainLayout>
+              <MilestoneVerification />
             </MainLayout>
           </ProtectedRoute>
         } />
@@ -257,6 +266,25 @@ function App() {
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
               <AdminEscrowManagement />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* New project rules management route */}
+        <Route path="/admin/projects/:projectId/rules" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                <Typography variant="h4" component="h1" gutterBottom>
+                  Release Rules Configuration
+                </Typography>
+                <Box sx={{ mt: 3 }}>
+                  {/* RuleConfiguration will be rendered with the projectId from params */}
+                  {({ params }) => (
+                    <RuleConfiguration projectId={params.projectId} />
+                  )}
+                </Box>
+              </Container>
             </MainLayout>
           </ProtectedRoute>
         } />

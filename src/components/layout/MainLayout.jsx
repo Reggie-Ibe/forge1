@@ -74,6 +74,16 @@ const MainLayout = ({ children }) => {
   const filteredNavigation = baseNavigation.filter((item) => 
     item.roles.includes(user?.role)
   );
+  
+  // Helper to check if a path matches the current location
+  const isPathActive = (path) => {
+    // For admin routes, match any path that starts with /admin
+    if (path === '/admin' && location.pathname.startsWith('/admin')) {
+      return true;
+    }
+    
+    return location.pathname === path;
+  };
 
   const drawer = (
     <div>
@@ -89,7 +99,7 @@ const MainLayout = ({ children }) => {
             <ListItemButton
               component={Link}
               to={item.path}
-              selected={location.pathname === item.path}
+              selected={isPathActive(item.path)}
               onClick={() => setMobileOpen(false)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
@@ -128,7 +138,20 @@ const MainLayout = ({ children }) => {
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
           >
-            {filteredNavigation.find(item => item.path === location.pathname)?.name || 'Dashboard'}
+            {location.pathname.startsWith('/admin') 
+              ? location.pathname === '/admin' 
+                ? 'Admin Dashboard' 
+                : location.pathname.includes('/admin/projects') 
+                  ? 'Project Management'
+                  : location.pathname.includes('/admin/wallet') 
+                    ? 'Payment Methods'
+                    : location.pathname.includes('/admin/users')
+                      ? 'User Management'
+                      : location.pathname.includes('/admin/settings')
+                        ? 'System Settings'
+                        : 'Admin Dashboard'
+              : filteredNavigation.find(item => item.path === location.pathname)?.name || 'Dashboard'
+            }
           </Typography>
           
           {/* User profile button */}
