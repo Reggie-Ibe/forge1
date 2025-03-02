@@ -22,10 +22,14 @@ import MilestoneVerification from './pages/MilestoneVerification';
 import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Wallet from './pages/Wallet';
+import RoleBasedRedirect from './components/auth/RoleBasedRedirect';
+
 
 // Admin pages
 import AdminDashboard from './pages/AdminDashboard';
 import AdminEscrowManagement from './pages/AdminEscrowManagement';
+import RuleConfiguration from './components/admin/RuleConfiguration';
+
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -119,6 +123,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/redirect" element={<RoleBasedRedirect />} />
 
         {/* Protected routes with layout */}
         <Route path="/dashboard" element={
