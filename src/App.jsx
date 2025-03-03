@@ -26,7 +26,7 @@ import RoleBasedRedirect from './components/auth/RoleBasedRedirect';
 
 
 // Admin pages
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './components/dashboard/AdminDashboard';
 import AdminEscrowManagement from './pages/AdminEscrowManagement';
 import RuleConfiguration from './components/admin/RuleConfiguration';
 

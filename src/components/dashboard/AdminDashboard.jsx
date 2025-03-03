@@ -1,8 +1,6 @@
-// src/pages/AdminDashboard.jsx
+// src/components/dashboard/AdminDashboard.jsx
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import AdminUserManagement from '../components/admin/AdminUserManagement';
-import AdminSettings from '../components/admin/AdminSettings';
 
 // Material UI components
 import {
@@ -41,14 +39,12 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
 
 // Import admin components
-import AdminProjects from '../components/admin/AdminProjects';
-import AdminPaymentMethods from './AdminPaymentMethods';
-import AdminEscrowManagement from './AdminEscrowManagement';
-import AdminUserManagement from '../components/admin/AdminUserManagement';
-import AdminSettings from '../components/admin/AdminSettings';
+import AdminProjects from '../admin/AdminProjects';
+import AdminUserManagement from '../admin/AdminUserManagement';
+import AdminSettings from '../admin/AdminSettings';
 
 // Import auth context
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -189,7 +185,16 @@ const AdminDashboard = () => {
       case 1:
         return <AdminProjects />;
       case 2:
-        return <AdminPaymentMethods />;
+        return (
+          <Box>
+            <Typography variant="h5" gutterBottom>
+              Payment Methods
+            </Typography>
+            <Alert severity="info">
+              Payment methods management is under development.
+            </Alert>
+          </Box>
+        );
       case 3:
         return <AdminUserManagement />;
       case 4:

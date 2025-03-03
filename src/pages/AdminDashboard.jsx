@@ -1,6 +1,8 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect } from 'react';
-import { Link, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import AdminUserManagement from '../components/admin/AdminUserManagement';
+import AdminSettings from '../components/admin/AdminSettings';
 
 // Material UI components
 import {
@@ -42,6 +44,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import AdminProjects from '../components/admin/AdminProjects';
 import AdminPaymentMethods from './AdminPaymentMethods';
 import AdminEscrowManagement from './AdminEscrowManagement';
+import AdminUserManagement from '../components/admin/AdminUserManagement';
+import AdminSettings from '../components/admin/AdminSettings';
 
 // Import auth context
 import { useAuth } from '../contexts/AuthContext';
@@ -148,7 +152,7 @@ const AdminDashboard = () => {
         }));
       }
     } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
+      console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard statistics');
     } finally {
       setLoading(false);
@@ -187,27 +191,9 @@ const AdminDashboard = () => {
       case 2:
         return <AdminPaymentMethods />;
       case 3:
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              User Management
-            </Typography>
-            <Alert severity="info">
-              User management module is under development.
-            </Alert>
-          </Box>
-        );
+        return <AdminUserManagement />;
       case 4:
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              System Settings
-            </Typography>
-            <Alert severity="info">
-              System settings module is under development.
-            </Alert>
-          </Box>
-        );
+        return <AdminSettings />;
       default:
         return renderDashboardOverview();
     }
@@ -336,7 +322,6 @@ const AdminDashboard = () => {
                     />
                     <Chip
                       label={`${stats.milestones.pending} Pending`}
-                      color="default"
                       size="small"
                       sx={{ mb: 1 }}
                     />
