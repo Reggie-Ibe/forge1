@@ -78,14 +78,55 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       
-      // In a real app, this would make an actual API call
-      navigate('/login', { state: { message: 'Registration successful! Check your email for verification instructions.' } });
+      // Prepare user data for API
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        createdAt: new Date().toISOString(),
+        verificationStatus: 'pending', // Set initial status as pending
+        documentVerification: {
+          idVerified: false,
+          addressVerified: false,
+          documentsRequested: false,
+          requestedDocuments: []
+        }
+      };
+      
+      console.log('Sending registration data:', userData);
+      
+      // Make actual API call to save user data
+      const response = await fetch(`${apiUrl}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Registration error response:', errorData);
+        throw new Error(errorData.message || `Registration failed with status: ${response.status}`);
+      }
+      
+      const savedUser = await response.json();
+      console.log('Registration successful:', savedUser);
+      
+      // Navigate to verification pending page with success message
+      navigate('/pending-verification', { 
+        state: { 
+          message: 'Registration successful! Your account is pending admin verification. You will be notified when your account is approved.',
+          email: formData.email 
+        } 
+      });
     } catch (error) {
       console.error('Registration error:', error);
-      setSubmitError('Registration failed. Please try again later.');
+      setSubmitError(error.message || 'Registration failed. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
@@ -107,6 +148,9 @@ const Register = () => {
             <PersonAddIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
             <Typography component="h1" variant="h5">
               Create your account
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
+              Your account will require admin verification before activation
             </Typography>
           </Box>
           
@@ -205,6 +249,12 @@ const Register = () => {
                     <MenuItem value="investor">Investor</MenuItem>
                   </Select>
                 </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Note: After registration, you may be asked to provide verification documents 
+                  such as ID and proof of address (utility bills or bank statements).
+                </Alert>
               </Grid>
               <Grid item xs={12}>
                 <FormControlLabel

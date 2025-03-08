@@ -9,6 +9,7 @@ import { Box, CircularProgress, Container, Paper, Typography, Button } from '@mu
 import MainLayout from './components/layout/MainLayout';
 
 // Pages
+import PendingVerification from './pages/PendingVerification';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -29,6 +30,8 @@ import RoleBasedRedirect from './components/auth/RoleBasedRedirect';
 import AdminDashboard from './components/dashboard/AdminDashboard';
 import AdminEscrowManagement from './pages/AdminEscrowManagement';
 import RuleConfiguration from './components/admin/RuleConfiguration';
+import AdminPaymentMethods from './pages/AdminPaymentMethods';
+import UserVerification from './components/admin/UserVerification';
 
 
 // Protected route component
@@ -122,6 +125,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/pending-verification" element={<PendingVerification />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/redirect" element={<RoleBasedRedirect />} />
 
@@ -297,7 +301,7 @@ function App() {
         <Route path="/admin/wallet" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
-              <AdminDashboard />
+              <AdminPaymentMethods />
             </MainLayout>
           </ProtectedRoute>
         } />
@@ -313,7 +317,7 @@ function App() {
         <Route path="/admin/users" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
-              <AdminDashboard />
+              <UserVerification />
             </MainLayout>
           </ProtectedRoute>
         } />

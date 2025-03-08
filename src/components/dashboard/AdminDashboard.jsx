@@ -37,11 +37,21 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import BlockIcon from '@mui/icons-material/Block';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 
 // Import admin components
 import AdminProjects from '../admin/AdminProjects';
 import AdminUserManagement from '../admin/AdminUserManagement';
 import AdminSettings from '../admin/AdminSettings';
+
+// Import escrow management and payment methods
+// Note: These paths need to be adjusted based on actual file locations
+import AdminPaymentMethods from '../../pages/AdminPaymentMethods';
+import AdminEscrowManagement from '../../pages/AdminEscrowManagement';
 
 // Import auth context
 import { useAuth } from '../../contexts/AuthContext';
@@ -54,7 +64,16 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [stats, setStats] = useState({
-    users: { total: 0, investors: 0, innovators: 0, admins: 0 },
+    users: { 
+      total: 0, 
+      investors: 0, 
+      innovators: 0, 
+      admins: 0,
+      pending: 0,
+      documentsRequested: 0,
+      approved: 0,
+      rejected: 0 
+    },
     projects: { total: 0, active: 0, pending: 0, completed: 0 },
     transactions: { total: 0, deposits: 0, investments: 0, disbursements: 0 },
     milestones: { total: 0, completed: 0, inProgress: 0, pending: 0 }
@@ -95,7 +114,11 @@ const AdminDashboard = () => {
             total: usersData.length,
             investors: usersData.filter(u => u.role === 'investor').length,
             innovators: usersData.filter(u => u.role === 'innovator').length,
-            admins: usersData.filter(u => u.role === 'admin').length
+            admins: usersData.filter(u => u.role === 'admin').length,
+            pending: usersData.filter(u => u.verificationStatus === 'pending').length,
+            documentsRequested: usersData.filter(u => u.verificationStatus === 'documents_requested').length,
+            approved: usersData.filter(u => u.verificationStatus === 'approved').length,
+            rejected: usersData.filter(u => u.verificationStatus === 'rejected').length
           }
         }));
       }
@@ -143,7 +166,8 @@ const AdminDashboard = () => {
             total: milestonesData.length,
             completed: milestonesData.filter(m => m.status === 'completed' && m.adminApproved).length,
             inProgress: milestonesData.filter(m => m.status === 'inProgress').length,
-            pending: milestonesData.filter(m => m.status === 'pending').length
+            pending: milestonesData.filter(m => m.status === 'pending').length,
+            pendingVerification: milestonesData.filter(m => m.status === 'completed' && !m.adminApproved).length
           }
         }));
       }
@@ -185,16 +209,7 @@ const AdminDashboard = () => {
       case 1:
         return <AdminProjects />;
       case 2:
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              Payment Methods
-            </Typography>
-            <Alert severity="info">
-              Payment methods management is under development.
-            </Alert>
-          </Box>
-        );
+        return <AdminPaymentMethods />;
       case 3:
         return <AdminUserManagement />;
       case 4:
@@ -246,6 +261,12 @@ const AdminDashboard = () => {
                       label={`${stats.users.admins} Admins`}
                       size="small"
                       sx={{ mb: 1 }}
+                    />
+                    <Chip
+                      label={`${stats.users.pending || 0} Pending Verification`}
+                      color="warning"
+                      size="small"
+                      sx={{ mr: 1, mb: 1 }}
                     />
                   </Box>
                 </Paper>
@@ -320,13 +341,14 @@ const AdminDashboard = () => {
                       sx={{ mr: 1, mb: 1 }}
                     />
                     <Chip
-                      label={`${stats.milestones.inProgress} In Progress`}
-                      color="primary"
+                      label={`${stats.milestones.pendingVerification || 0} Pending Verification`}
+                      color="warning"
                       size="small"
                       sx={{ mr: 1, mb: 1 }}
                     />
                     <Chip
-                      label={`${stats.milestones.pending} Pending`}
+                      label={`${stats.milestones.inProgress} In Progress`}
+                      color="primary"
                       size="small"
                       sx={{ mb: 1 }}
                     />
@@ -352,7 +374,7 @@ const AdminDashboard = () => {
                       Manage all projects on the platform, approve pending projects, and release funds based on milestone completion.
                     </Typography>
                   </CardContent>
-                  <CardActions>
+                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     <Button size="small" component={Link} to="/admin/projects">
                       View All Projects
                     </Button>
@@ -364,7 +386,7 @@ const AdminDashboard = () => {
                         component={Link} 
                         to="/admin/projects?status=pending"
                       >
-                        {stats.projects.pending} Pending Approvals
+                        Approve {stats.projects.pending} Pending Projects
                       </Button>
                     )}
                   </CardActions>
@@ -406,19 +428,75 @@ const AdminDashboard = () => {
                       <Typography variant="h6">User Management</Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary" paragraph>
-                      Manage platform users, including investors, innovators, and administrators.
+                      Manage platform users, verify user accounts, and request identity documents for verification.
                     </Typography>
                   </CardContent>
-                  <CardActions>
+                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     <Button size="small" component={Link} to="/admin/users">
                       Manage Users
                     </Button>
+                    {(stats.users.pending > 0 || stats.users.documentsRequested > 0) && (
+                      <Button 
+                        size="small" 
+                        variant="contained" 
+                        color="warning"
+                        component={Link} 
+                        to="/admin/users"
+                      >
+                        Verify {stats.users.pending + (stats.users.documentsRequested || 0)} Users
+                      </Button>
+                    )}
+                  </CardActions>
+                </Card>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={4}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <AccountBalanceIcon color="primary" sx={{ mr: 1 }} />
+                      <Typography variant="h6">Escrow Management</Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      Manage escrow accounts, verify project milestones, and release funds to project owners based on completion.
+                    </Typography>
+                  </CardContent>
+                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     <Button 
                       size="small" 
-                      variant="outlined"
                       component={Link} 
-                      to="/admin/settings"
+                      to="/admin/projects"
                     >
+                      View Projects
+                    </Button>
+                    {stats.milestones.pendingVerification > 0 && (
+                      <Button 
+                        size="small" 
+                        variant="contained" 
+                        color="warning"
+                        component={Link} 
+                        to="/admin/projects?pendingVerification=true"
+                      >
+                        Verify {stats.milestones.pendingVerification} Milestones
+                      </Button>
+                    )}
+                  </CardActions>
+                </Card>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={4}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <SettingsIcon color="primary" sx={{ mr: 1 }} />
+                      <Typography variant="h6">System Settings</Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      Configure system-wide settings, security options, and platform parameters.
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button size="small" component={Link} to="/admin/settings">
                       System Settings
                     </Button>
                   </CardActions>
@@ -444,11 +522,13 @@ const AdminDashboard = () => {
                       </Typography>
                       <Button 
                         size="small" 
+                        variant="contained"
+                        color="warning"
                         sx={{ mt: 1 }}
                         component={Link} 
                         to="/admin/projects?status=pending"
                       >
-                        Review
+                        Approve Projects
                       </Button>
                     </Box>
                   </Grid>
@@ -456,18 +536,41 @@ const AdminDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" color="warning.main">
-                        {stats.milestones.total - stats.milestones.completed - stats.milestones.pending - stats.milestones.inProgress}
+                        {stats.users.pending || 0}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Pending Approvals
+                        Pending User Verifications
                       </Typography>
                       <Button 
                         size="small" 
+                        variant="contained"
+                        color="warning"
                         sx={{ mt: 1 }}
                         component={Link} 
-                        to="/admin/projects"
+                        to="/admin/users"
                       >
-                        Review
+                        Verify Users
+                      </Button>
+                    </Box>
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" color="warning.main">
+                        {stats.milestones.pendingVerification || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Milestone Verifications
+                      </Typography>
+                      <Button 
+                        size="small" 
+                        variant="contained"
+                        color="warning"
+                        sx={{ mt: 1 }}
+                        component={Link} 
+                        to="/admin/projects?pendingVerification=true"
+                      >
+                        Verify Milestones
                       </Button>
                     </Box>
                   </Grid>
@@ -482,30 +585,13 @@ const AdminDashboard = () => {
                       </Typography>
                       <Button 
                         size="small" 
+                        variant="contained"
+                        color="warning"
                         sx={{ mt: 1 }}
                         component={Link} 
                         to="/admin/wallet/transactions?type=deposit&status=pending"
                       >
-                        Review
-                      </Button>
-                    </Box>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h4" color="success.main">
-                        {stats.milestones.completed}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Completed Milestones
-                      </Typography>
-                      <Button 
-                        size="small" 
-                        sx={{ mt: 1 }}
-                        component={Link} 
-                        to="/admin/projects"
-                      >
-                        View
+                        Approve Deposits
                       </Button>
                     </Box>
                   </Grid>

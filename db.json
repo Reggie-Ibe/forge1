@@ -41,6 +41,32 @@
       "profileImage": "/uploads/profiles/admin-user.jpg",
       "profileCompleted": true,
       "createdAt": "2023-08-01T10:00:00.000Z"
+    },
+    {
+      "firstName": "Sam",
+      "lastName": "Adam",
+      "email": "Samadam@example.com",
+      "password": "Password123",
+      "role": "innovator",
+      "createdAt": "2025-03-07T14:59:54.793Z",
+      "status": "active",
+      "id": 4
+    },
+    {
+      "firstName": "Elon",
+      "lastName": "Musk",
+      "email": "Elon@example.com",
+      "password": "Password123",
+      "role": "investor",
+      "createdAt": "2025-03-08T16:31:40.848Z",
+      "verificationStatus": "pending",
+      "documentVerification": {
+        "idVerified": false,
+        "addressVerified": false,
+        "documentsRequested": false,
+        "requestedDocuments": []
+      },
+      "id": 5
     }
   ],
   "projects": [
@@ -69,7 +95,10 @@
           "uploadedAt": "2023-08-16T14:45:00.000Z"
         }
       ],
-      "sdgs": [6, 3],
+      "sdgs": [
+        6,
+        3
+      ],
       "timeline": "12 months implementation plan with 4 key milestones",
       "impact": "Provide clean water access to 10,000 people in rural communities"
     },
@@ -92,9 +121,30 @@
           "uploadedAt": "2023-09-01T15:00:00.000Z"
         }
       ],
-      "sdgs": [2, 12],
+      "sdgs": [
+        2,
+        12
+      ],
       "timeline": "18 months development and launch schedule",
       "impact": "Support 500 farmers and reduce food waste by 30% in target communities"
+    },
+    {
+      "userId": 1,
+      "title": "Child PC Initiative ",
+      "description": "Spreading PCs to every child in 3rd world countries",
+      "category": "EdTech",
+      "fundingGoal": 100000,
+      "currentFunding": 50000,
+      "status": "pending",
+      "createdAt": "2025-03-04T15:03:55.951Z",
+      "sdgs": [
+        3,
+        4,
+        9
+      ],
+      "timeline": "June 2025 - Spread PCs to 25% of students in selected areas\n",
+      "impact": "25% of students own PCs",
+      "id": 3
     }
   ],
   "investments": [
@@ -181,6 +231,15 @@
       ],
       "note": "Strategic investment in agricultural technology",
       "createdAt": "2023-09-05T10:15:00.000Z"
+    },
+    {
+      "userId": 2,
+      "projectId": 3,
+      "amount": 50000,
+      "note": "",
+      "status": "completed",
+      "createdAt": "2025-03-04T15:06:36.518Z",
+      "id": 3
     }
   ],
   "milestones": [
@@ -541,7 +600,11 @@
         },
         {
           "type": "notify",
-          "targets": ["project_owner", "investors", "admin"],
+          "targets": [
+            "project_owner",
+            "investors",
+            "admin"
+          ],
           "template": "funds_released"
         }
       ],
@@ -581,7 +644,10 @@
         },
         {
           "type": "notify",
-          "targets": ["project_owner", "investors"],
+          "targets": [
+            "project_owner",
+            "investors"
+          ],
           "template": "funds_released"
         }
       ],
@@ -619,7 +685,10 @@
           "success": true,
           "details": {
             "recipientCount": 2,
-            "notificationIds": [1, 2]
+            "notificationIds": [
+              1,
+              2
+            ]
           }
         }
       ]
@@ -678,7 +747,11 @@
       "name": "Impact Tech Collective",
       "description": "A group focused on high-impact technology investments",
       "leadInvestorId": 2,
-      "members": [2, 4, 5],
+      "members": [
+        2,
+        4,
+        5
+      ],
       "createdAt": "2023-09-01T10:00:00.000Z"
     }
   ],
@@ -760,6 +833,15 @@
       "status": "completed",
       "createdAt": "2023-10-30T09:35:00.000Z",
       "description": "Milestone payment: Prototype Development completed and verified"
+    },
+    {
+      "userId": 2,
+      "type": "investment",
+      "amount": -50000,
+      "projectId": 3,
+      "status": "completed",
+      "createdAt": "2025-03-04T15:06:37.187Z",
+      "id": 6
     }
   ],
   "systemSettings": {
@@ -774,7 +856,11 @@
       },
       "crypto": {
         "enabled": true,
-        "acceptedCurrencies": ["BTC", "ETH", "USDC"],
+        "acceptedCurrencies": [
+          "BTC",
+          "ETH",
+          "USDC"
+        ],
         "walletAddresses": {
           "BTC": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
           "ETH": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
