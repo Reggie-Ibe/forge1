@@ -25,14 +25,13 @@ import Profile from './pages/Profile';
 import Wallet from './pages/Wallet';
 import RoleBasedRedirect from './components/auth/RoleBasedRedirect';
 
-
 // Admin pages
 import AdminDashboard from './components/dashboard/AdminDashboard';
 import AdminEscrowManagement from './pages/AdminEscrowManagement';
 import RuleConfiguration from './components/admin/RuleConfiguration';
 import AdminPaymentMethods from './pages/AdminPaymentMethods';
+import AdminUserManagement from './components/admin/AdminUserManagement';
 import UserVerification from './components/admin/UserVerification';
-
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -279,7 +278,7 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* New project rules management route */}
+        {/* Project rules management route */}
         <Route path="/admin/projects/:projectId/rules" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
@@ -288,10 +287,7 @@ function App() {
                   Release Rules Configuration
                 </Typography>
                 <Box sx={{ mt: 3 }}>
-                  {/* RuleConfiguration will be rendered with the projectId from params */}
-                  {({ params }) => (
-                    <RuleConfiguration projectId={params.projectId} />
-                  )}
+                  <RuleConfiguration projectId={window.location.pathname.split('/')[3]} />
                 </Box>
               </Container>
             </MainLayout>
@@ -315,6 +311,14 @@ function App() {
         } />
 
         <Route path="/admin/users" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminUserManagement />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/users/verification" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
               <UserVerification />

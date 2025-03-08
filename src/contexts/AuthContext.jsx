@@ -1,97 +1,71 @@
 // src/contexts/AuthContext.jsx
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-// Create auth context
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  // Check if user is already logged in (using localStorage)
+
   useEffect(() => {
-    const loadUser = () => {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error('Error parsing stored user data', error);
-          localStorage.removeItem('user');
-        }
+    // Check if user is stored in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('user');
       }
-      setLoading(false);
-    };
-    
-    loadUser();
+    }
+    setLoading(false);
   }, []);
-  
-  // Login function
-const login = async (email, password) => {
-  try {
-    // In a real app, this would be an API call
-    // For testing purposes, use hardcoded credentials or JSON server
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/users?email=${email}`);
-    
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
+
+  const login = (userData) => {
+    // Make sure we're getting valid user data
+    if (!userData || !userData.id) {
+      console.error('Invalid user data provided to login function:', userData);
+      return false;
     }
     
-    const users = await response.json();
+    console.log('Setting user in AuthContext:', userData);
     
-    if (users.length > 0 && users[0].password === password) {
-      // Remove the password from the user object before storing
-      const { password: _, ...userWithoutPassword } = users[0];
-      setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      return { success: true };
+    // Set the user in state
+    setUser(userData);
+    setIsAuthenticated(true);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Error saving user to localStorage:', error);
     }
-    return { success: false, message: 'Invalid email or password' };
-  } catch (error) {
-    console.error('Login error:', error);
-    return { success: false, message: 'Login failed. Please try again later.' };
-  }
-};
-  
-  // Logout function
+    
+    return true;
+  };
+
   const logout = () => {
     setUser(null);
+    setIsAuthenticated(false);
     localStorage.removeItem('user');
   };
-  
-  // Register function (for future implementation)
-  const register = async (userData) => {
-    try {
-      // This would be an API call in a real app
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, message: error.message || 'Registration failed' };
-    }
-  };
-  
+
+  // For debugging
+  useEffect(() => {
+    console.log('Auth state changed - isAuthenticated:', isAuthenticated);
+    console.log('Auth state changed - user:', user);
+  }, [isAuthenticated, user]);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
-      login, 
-      logout, 
-      register,
+      isAuthenticated, 
       loading, 
-      isAuthenticated: !!user 
+      login, 
+      logout 
     }}>
       {children}
     </AuthContext.Provider>

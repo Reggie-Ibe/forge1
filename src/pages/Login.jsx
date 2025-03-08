@@ -1,5 +1,5 @@
 // src/pages/Login.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,7 +24,7 @@ import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -35,6 +35,13 @@ const Login = () => {
   
   // Check for messages from other pages (like registration success)
   const message = location.state?.message || '';
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
   
   const validateForm = () => {
     if (!email.trim()) {
@@ -100,17 +107,20 @@ const Login = () => {
               role: user.role
             };
             
+            console.log('Login successful, user data:', userData);
+            
             // Use the context's login function
             login(userData);
             
-            // Redirect based on role
-            if (user.role === 'admin') {
-              navigate('/admin');
-            } else if (user.role === 'investor') {
-              navigate('/dashboard');
-            } else {
-              navigate('/dashboard');
-            }
+            // Redirect based on role after a short delay to allow the context to update
+            setTimeout(() => {
+              if (user.role === 'admin') {
+                navigate('/admin');
+              } else {
+                navigate('/dashboard');
+              }
+            }, 100);
+            
           } else {
             throw new Error('Invalid email or password');
           }
@@ -123,7 +133,6 @@ const Login = () => {
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Login failed. Please try again.');
-    } finally {
       setIsSubmitting(false);
     }
   };

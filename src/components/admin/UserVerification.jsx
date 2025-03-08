@@ -1,4 +1,4 @@
-// src/components/admin/UserVerification.jsx
+
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -42,6 +42,7 @@ import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import BadgeIcon from '@mui/icons-material/Badge';
 import HomeIcon from '@mui/icons-material/Home';
 import SendIcon from '@mui/icons-material/Send';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const UserVerification = () => {
   const [loading, setLoading] = useState(true);
@@ -410,10 +411,10 @@ const UserVerification = () => {
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <PersonIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2">Role: {user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Typography>
+                      <Typography variant="body2">Role: {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Unknown'}</Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      Registered: {new Date(user.createdAt).toLocaleDateString()}
+                      Registered: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                     </Typography>
                   </Box>
                   
@@ -423,7 +424,7 @@ const UserVerification = () => {
                         Requested Documents:
                       </Typography>
                       <List dense disablePadding>
-                        {user.documentVerification.requestedDocuments.map((doc, index) => (
+                        {user.documentVerification.requestedDocuments && user.documentVerification.requestedDocuments.map((doc, index) => (
                           <ListItem key={index} disablePadding sx={{ py: 0.5 }}>
                             <ListItemIcon sx={{ minWidth: 32 }}>
                               {doc.includes('ID') ? 
@@ -463,13 +464,6 @@ const UserVerification = () => {
                         onClick={() => handleOpenDocumentDialog(user)}
                       >
                         Request Documents
-                      </Button>
-                      <Button 
-                        size="small" 
-                        color="error"
-                        onClick={() => handleOpenRejectDialog(user)}
-                      >
-                        Reject
                       </Button>
                       <Button 
                         size="small" 

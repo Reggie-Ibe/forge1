@@ -77,18 +77,6 @@ const AdminUserManagement = () => {
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Verification dialogs
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [documentRequest, setDocumentRequest] = useState({
-    idDocument: true,
-    proofOfAddress: true,
-    otherDocuments: false,
-    otherDocumentsDescription: ''
-  });
-  
   // Success message
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -262,208 +250,6 @@ const AdminUserManagement = () => {
       setIsDeleting(false);
     }
   };
-  
-  // Verification handlers
-  const handleOpenVerifyDialog = (user) => {
-    setSelectedUser(user);
-    setVerifyDialogOpen(true);
-  };
-  
-  const handleOpenRejectDialog = (user) => {
-    setSelectedUser(user);
-    setRejectReason('');
-    setRejectDialogOpen(true);
-  };
-  
-  const handleOpenDocumentDialog = (user) => {
-    setSelectedUser(user);
-    setDocumentRequest({
-      idDocument: true,
-      proofOfAddress: true,
-      otherDocuments: false,
-      otherDocumentsDescription: ''
-    });
-    setDocumentDialogOpen(true);
-  };
-  
-  const handleCloseDialogs = () => {
-    setVerifyDialogOpen(false);
-    setRejectDialogOpen(false);
-    setDocumentDialogOpen(false);
-  };
-  
-  const handleVerifyUser = async () => {
-    if (!selectedUser) return;
-    setIsEditSubmitting(true);
-    
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
-      const response = await fetch(`${apiUrl}/users/${selectedUser.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          verificationStatus: 'approved',
-          verifiedBy: 'admin', // In a real app, use the actual admin ID
-          verifiedAt: new Date().toISOString()
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to verify user');
-      }
-      
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === selectedUser.id 
-          ? { ...user, verificationStatus: 'approved', verifiedAt: new Date().toISOString() } 
-          : user
-      ));
-      
-      setSuccessMessage(`User ${selectedUser.firstName} ${selectedUser.lastName} has been verified successfully.`);
-      handleCloseDialogs();
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000);
-    } catch (err) {
-      console.error('Error verifying user:', err);
-      setError('Failed to verify user. Please try again.');
-    } finally {
-      setIsEditSubmitting(false);
-    }
-  };
-  
-  const handleRejectUser = async () => {
-    if (!selectedUser || !rejectReason.trim()) return;
-    setIsEditSubmitting(true);
-    
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
-      const response = await fetch(`${apiUrl}/users/${selectedUser.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          verificationStatus: 'rejected',
-          rejectionReason: rejectReason,
-          rejectedBy: 'admin', // In a real app, use the actual admin ID
-          rejectedAt: new Date().toISOString()
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to reject user');
-      }
-      
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === selectedUser.id 
-          ? { 
-              ...user, 
-              verificationStatus: 'rejected',
-              rejectionReason: rejectReason,
-              rejectedAt: new Date().toISOString() 
-            } 
-          : user
-      ));
-      
-      setSuccessMessage(`User ${selectedUser.firstName} ${selectedUser.lastName} has been rejected.`);
-      handleCloseDialogs();
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000);
-    } catch (err) {
-      console.error('Error rejecting user:', err);
-      setError('Failed to reject user. Please try again.');
-    } finally {
-      setIsEditSubmitting(false);
-    }
-  };
-  
-  const handleRequestDocuments = async () => {
-    if (!selectedUser) return;
-    
-    if (!documentRequest.idDocument && !documentRequest.proofOfAddress && 
-        !(documentRequest.otherDocuments && documentRequest.otherDocumentsDescription.trim())) {
-      setError('Please select at least one document to request');
-      return;
-    }
-    
-    setIsEditSubmitting(true);
-    
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
-      // Prepare requested documents array
-      const requestedDocs = [];
-      if (documentRequest.idDocument) requestedDocs.push('ID Document');
-      if (documentRequest.proofOfAddress) requestedDocs.push('Proof of Address');
-      if (documentRequest.otherDocuments && documentRequest.otherDocumentsDescription.trim()) {
-        requestedDocs.push(documentRequest.otherDocumentsDescription);
-      }
-      
-      const response = await fetch(`${apiUrl}/users/${selectedUser.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          verificationStatus: 'documents_requested',
-          documentVerification: {
-            documentsRequested: true,
-            requestedDocuments: requestedDocs,
-            requestedAt: new Date().toISOString(),
-            requestedBy: 'admin', // In a real app, use the actual admin ID
-            idVerified: false,
-            addressVerified: false
-          }
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to request documents');
-      }
-      
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === selectedUser.id 
-          ? { 
-              ...user, 
-              verificationStatus: 'documents_requested',
-              documentVerification: {
-                documentsRequested: true,
-                requestedDocuments: requestedDocs,
-                requestedAt: new Date().toISOString(),
-                requestedBy: 'admin',
-                idVerified: false,
-                addressVerified: false
-              }
-            } 
-          : user
-      ));
-      
-      setSuccessMessage(`Document request sent to ${selectedUser.firstName} ${selectedUser.lastName}.`);
-      handleCloseDialogs();
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000);
-    } catch (err) {
-      console.error('Error requesting documents:', err);
-      setError('Failed to request documents. Please try again.');
-    } finally {
-      setIsEditSubmitting(false);
-    }
-  };
 
   const getStatusChip = (status) => {
     switch (status) {
@@ -487,19 +273,34 @@ const AdminUserManagement = () => {
     );
   }
 
+  const pendingUsersCount = users.filter(user => 
+    user.verificationStatus === 'pending' || user.verificationStatus === 'documents_requested'
+  ).length;
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" component="h2">
           User Management
         </Typography>
-        <Button 
-          startIcon={<RefreshIcon />} 
-          variant="outlined"
-          onClick={fetchUsers}
-        >
-          Refresh
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            component={Link}
+            to="/admin/users/verification"
+            startIcon={<VerifiedUserIcon />}
+          >
+            {pendingUsersCount > 0 ? `Verification Queue (${pendingUsersCount})` : "Verification Queue"}
+          </Button>
+          <Button 
+            startIcon={<RefreshIcon />} 
+            variant="outlined"
+            onClick={fetchUsers}
+          >
+            Refresh
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -514,7 +315,7 @@ const AdminUserManagement = () => {
         </Alert>
       )}
 
-      {/* Tabs for different verification statuses */}
+      {/* Tabs for different user categories */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs 
           value={activeTab} 
@@ -656,38 +457,6 @@ const AdminUserManagement = () => {
                   </TableCell>
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                      {(user.verificationStatus === 'pending' || user.verificationStatus === 'documents_requested') && (
-                        <>
-                          <Tooltip title="Request Documents">
-                            <IconButton 
-                              onClick={() => handleOpenDocumentDialog(user)}
-                              size="small" 
-                              color="info"
-                            >
-                              <DocumentScannerIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Verify User">
-                            <IconButton 
-                              onClick={() => handleOpenVerifyDialog(user)}
-                              size="small" 
-                              color="success"
-                            >
-                              <VerifiedUserIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Reject User">
-                            <IconButton 
-                              onClick={() => handleOpenRejectDialog(user)}
-                              size="small" 
-                              color="error"
-                            >
-                              <BlockIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                      
                       <Tooltip title="Edit User">
                         <IconButton 
                           onClick={() => handleEditUser(user)}
@@ -814,153 +583,6 @@ const AdminUserManagement = () => {
             startIcon={isDeleting ? <CircularProgress size={20} /> : null}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Verify User Dialog */}
-      <Dialog open={verifyDialogOpen} onClose={handleCloseDialogs}>
-        <DialogTitle>Verify User</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to verify {selectedUser?.firstName} {selectedUser?.lastName}?
-            This will grant the user full access to the platform.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialogs}>Cancel</Button>
-          <Button 
-            onClick={handleVerifyUser} 
-            variant="contained" 
-            color="success"
-            disabled={isEditSubmitting}
-            startIcon={isEditSubmitting ? <CircularProgress size={20} /> : <VerifiedUserIcon />}
-          >
-            {isEditSubmitting ? 'Verifying...' : 'Verify User'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Reject User Dialog */}
-      <Dialog open={rejectDialogOpen} onClose={handleCloseDialogs}>
-        <DialogTitle>Reject User</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Please provide a reason for rejecting {selectedUser?.firstName} {selectedUser?.lastName}.
-            This information will be shared with the user.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="rejection-reason"
-            label="Rejection Reason"
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            required
-            error={rejectReason.trim() === ''}
-            helperText={rejectReason.trim() === '' ? 'Rejection reason is required' : ''}
-            sx={{ mt: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialogs}>Cancel</Button>
-          <Button 
-            onClick={handleRejectUser} 
-            variant="contained" 
-            color="error"
-            disabled={isEditSubmitting || rejectReason.trim() === ''}
-            startIcon={isEditSubmitting ? <CircularProgress size={20} /> : <BlockIcon />}
-          >
-            {isEditSubmitting ? 'Rejecting...' : 'Reject User'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Request Documents Dialog */}
-      <Dialog open={documentDialogOpen} onClose={handleCloseDialogs}>
-        <DialogTitle>Request Verification Documents</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Select the documents you want to request from {selectedUser?.firstName} {selectedUser?.lastName}.
-            The user will be notified to submit these documents.
-          </DialogContentText>
-          
-          <Box sx={{ mt: 2 }}>
-          <FormControlLabel
-              control={
-                <Checkbox
-                  checked={documentRequest.idDocument}
-                  onChange={(e) => setDocumentRequest({
-                    ...documentRequest,
-                    idDocument: e.target.checked
-                  })}
-                />
-              }
-              label="Government-issued ID (passport, driver's license)"
-            />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={documentRequest.proofOfAddress}
-                  onChange={(e) => setDocumentRequest({
-                    ...documentRequest,
-                    proofOfAddress: e.target.checked
-                  })}
-                />
-              }
-              label="Proof of address (utility bills or bank statements)"
-            />
-            
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={documentRequest.otherDocuments}
-                  onChange={(e) => setDocumentRequest({
-                    ...documentRequest,
-                    otherDocuments: e.target.checked
-                  })}
-                />
-              }
-              label="Other documents"
-            />
-            
-            {documentRequest.otherDocuments && (
-              <TextField
-                margin="dense"
-                id="other-documents"
-                label="Specify other documents"
-                type="text"
-                fullWidth
-                value={documentRequest.otherDocumentsDescription}
-                onChange={(e) => setDocumentRequest({
-                  ...documentRequest,
-                  otherDocumentsDescription: e.target.value
-                })}
-                required={documentRequest.otherDocuments}
-                error={documentRequest.otherDocuments && documentRequest.otherDocumentsDescription.trim() === ''}
-                helperText={documentRequest.otherDocuments && documentRequest.otherDocumentsDescription.trim() === '' ? 'Please specify the documents' : ''}
-              />
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialogs}>Cancel</Button>
-          <Button 
-            onClick={handleRequestDocuments} 
-            variant="contained" 
-            color="primary"
-            disabled={isEditSubmitting || 
-              (!documentRequest.idDocument && 
-               !documentRequest.proofOfAddress && 
-               !(documentRequest.otherDocuments && documentRequest.otherDocumentsDescription.trim()))}
-            startIcon={isEditSubmitting ? <CircularProgress size={20} /> : <DocumentScannerIcon />}
-          >
-            {isEditSubmitting ? 'Sending Request...' : 'Send Request'}
           </Button>
         </DialogActions>
       </Dialog>

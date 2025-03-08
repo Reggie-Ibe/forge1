@@ -47,11 +47,10 @@ import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import AdminProjects from '../admin/AdminProjects';
 import AdminUserManagement from '../admin/AdminUserManagement';
 import AdminSettings from '../admin/AdminSettings';
+import UserVerification from '../admin/UserVerification';
 
 // Import escrow management and payment methods
-// Note: These paths need to be adjusted based on actual file locations
 import AdminPaymentMethods from '../../pages/AdminPaymentMethods';
-import AdminEscrowManagement from '../../pages/AdminEscrowManagement';
 
 // Import auth context
 import { useAuth } from '../../contexts/AuthContext';
@@ -211,6 +210,10 @@ const AdminDashboard = () => {
       case 2:
         return <AdminPaymentMethods />;
       case 3:
+        // Check if we're on the user verification route
+        if (location.pathname.includes('/admin/users/verification')) {
+          return <UserVerification />;
+        }
         return <AdminUserManagement />;
       case 4:
         return <AdminSettings />;
@@ -441,7 +444,7 @@ const AdminDashboard = () => {
                         variant="contained" 
                         color="warning"
                         component={Link} 
-                        to="/admin/users"
+                        to="/admin/users/verification"
                       >
                         Verify {stats.users.pending + (stats.users.documentsRequested || 0)} Users
                       </Button>
@@ -547,7 +550,7 @@ const AdminDashboard = () => {
                         color="warning"
                         sx={{ mt: 1 }}
                         component={Link} 
-                        to="/admin/users"
+                        to="/admin/users/verification"
                       >
                         Verify Users
                       </Button>

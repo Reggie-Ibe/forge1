@@ -12,7 +12,8 @@
       "bio": "Experienced entrepreneur with a focus on sustainable technologies.",
       "profileImage": "/uploads/profiles/john-doe.jpg",
       "profileCompleted": true,
-      "createdAt": "2023-08-10T14:23:45.000Z"
+      "createdAt": "2023-08-10T14:23:45.000Z",
+      "verificationStatus": "approved"
     },
     {
       "id": 2,
@@ -27,7 +28,8 @@
       "profileImage": "/uploads/profiles/jane-smith.jpg",
       "walletBalance": 250000,
       "profileCompleted": true,
-      "createdAt": "2023-08-11T09:15:30.000Z"
+      "createdAt": "2023-08-11T09:15:30.000Z",
+      "verificationStatus": "approved"
     },
     {
       "id": 3,
@@ -40,7 +42,8 @@
       "phone": "+1 (555) 456-7890",
       "profileImage": "/uploads/profiles/admin-user.jpg",
       "profileCompleted": true,
-      "createdAt": "2023-08-01T10:00:00.000Z"
+      "createdAt": "2023-08-01T10:00:00.000Z",
+      "verificationStatus": "approved"
     },
     {
       "firstName": "Sam",
@@ -50,7 +53,8 @@
       "role": "innovator",
       "createdAt": "2025-03-07T14:59:54.793Z",
       "status": "active",
-      "id": 4
+      "id": 4,
+      "verificationStatus": "approved"
     },
     {
       "firstName": "Elon",
@@ -59,14 +63,16 @@
       "password": "Password123",
       "role": "investor",
       "createdAt": "2025-03-08T16:31:40.848Z",
-      "verificationStatus": "pending",
+      "verificationStatus": "approved",
       "documentVerification": {
         "idVerified": false,
         "addressVerified": false,
         "documentsRequested": false,
         "requestedDocuments": []
       },
-      "id": 5
+      "id": 5,
+      "verifiedBy": "admin",
+      "verifiedAt": "2025-03-08T17:21:06.417Z"
     }
   ],
   "projects": [
