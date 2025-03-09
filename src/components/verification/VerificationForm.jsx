@@ -2,6 +2,36 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Material UI components
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  FormControlLabel,
+  Checkbox,
+  Paper,
+  Grid,
+  Divider,
+  Alert,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  Chip,
+  Rating,
+  FormHelperText,
+  Stack
+} from '@mui/material';
+
+// Material UI icons
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import SendIcon from '@mui/icons-material/Send';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+
 const VerificationForm = ({ milestone, onVerificationSubmit }) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -9,7 +39,11 @@ const VerificationForm = ({ milestone, onVerificationSubmit }) => {
   const [success, setSuccess] = useState('');
   const [verificationData, setVerificationData] = useState({
     comment: '',
-    criteria: []
+    criteria: [],
+    completionRating: 3,
+    documentationRating: 3,
+    qualityRating: 3,
+    verified: false
   });
   
   // Initialize criteria from milestone
@@ -24,6 +58,34 @@ const VerificationForm = ({ milestone, onVerificationSubmit }) => {
           verified: false,
           comment: ''
         }))
+      });
+    } else {
+      // If no criteria defined, create default criteria
+      setVerificationData({
+        ...verificationData,
+        criteria: [
+          {
+            id: 1,
+            description: 'The milestone deliverables are complete as described',
+            required: true,
+            verified: false,
+            comment: ''
+          },
+          {
+            id: 2,
+            description: 'The documentation provided is sufficient to verify completion',
+            required: true,
+            verified: false,
+            comment: ''
+          },
+          {
+            id: 3,
+            description: 'The quality of work meets project standards',
+            required: true,
+            verified: false,
+            comment: ''
+          }
+        ]
       });
     }
   }, [milestone]);
@@ -53,17 +115,34 @@ const VerificationForm = ({ milestone, onVerificationSubmit }) => {
     });
   };
   
+  const handleRatingChange = (name, value) => {
+    setVerificationData({
+      ...verificationData,
+      [name]: value
+    });
+  };
+  
+  const handleVerifiedChange = (e) => {
+    setVerificationData({
+      ...verificationData,
+      verified: e.target.checked
+    });
+  };
+  
   const isFormValid = () => {
     // Check if all required criteria are verified
     const requiredCriteria = verificationData.criteria.filter(c => c.required);
-    return requiredCriteria.every(c => c.verified);
+    const allRequiredVerified = requiredCriteria.every(c => c.verified);
+    
+    // Check if verification checkbox is checked
+    return allRequiredVerified && verificationData.verified;
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isFormValid()) {
-      setError('Please verify all required criteria');
+      setError('Please verify all required criteria and confirm your verification');
       return;
     }
     
@@ -72,64 +151,36 @@ const VerificationForm = ({ milestone, onVerificationSubmit }) => {
     setSuccess('');
     
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      // Calculate average rating
+      const averageRating = Math.round(
+        (verificationData.completionRating + 
+         verificationData.documentationRating + 
+         verificationData.qualityRating) / 3
+      );
       
-      // Prepare verification data
+      // Prepare verification data for submission
       const verification = {
-        milestoneId: milestone.id,
-        projectId: milestone.projectId,
-        verifierId: user.id,
-        verifierRole: user.role,
-        verificationDate: new Date().toISOString(),
         status: 'approved',
         comment: verificationData.comment,
         criteriaVerified: verificationData.criteria.map(c => ({
           criterionId: c.id,
           verified: c.verified,
           comment: c.comment
-        }))
+        })),
+        ratings: {
+          completion: verificationData.completionRating,
+          documentation: verificationData.documentationRating,
+          quality: verificationData.qualityRating,
+          average: averageRating
+        }
       };
       
-      // Submit verification to API
-      const response = await fetch(`${apiUrl}/verifications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(verification),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to submit verification');
-      }
-      
-      const result = await response.json();
-      
-      // Also update the milestone status if this is the final approval
-      if (user.role === 'admin') {
-        const milestoneResponse = await fetch(`${apiUrl}/milestones/${milestone.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            adminApproved: true,
-            approvedBy: user.id,
-            approvedDate: new Date().toISOString(),
-          }),
-        });
-        
-        if (!milestoneResponse.ok) {
-          throw new Error('Failed to update milestone status');
-        }
+      // Call the onVerificationSubmit callback
+      if (onVerificationSubmit) {
+        await onVerificationSubmit(verification);
       }
       
       setSuccess('Verification submitted successfully');
-      
-      // Call the callback function if provided
-      if (onVerificationSubmit) {
-        onVerificationSubmit(result);
-      }
       
     } catch (err) {
       console.error('Error submitting verification:', err);
@@ -140,122 +191,174 @@ const VerificationForm = ({ milestone, onVerificationSubmit }) => {
   };
   
   if (!milestone) {
-    return <div className="text-center py-4">No milestone selected for verification</div>;
+    return <Alert severity="error">No milestone selected for verification</Alert>;
   }
   
   return (
-    <div className="verification-form bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Milestone Verification</h2>
-      
+    <Box component="form" onSubmit={handleSubmit} noValidate>
       {error && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
-        </div>
+        </Alert>
       )}
       
       {success && (
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
+        <Alert severity="success" sx={{ mb: 3 }}>
           {success}
-        </div>
+        </Alert>
       )}
       
-      <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-2">Milestone Details</h3>
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-900">{milestone.title}</h4>
-          <p className="text-sm text-gray-600 mt-1">{milestone.description}</p>
-        </div>
-      </div>
-      
-      <form onSubmit={handleSubmit}>
-        <h3 className="text-lg font-medium text-gray-700 mb-3">Verification Criteria</h3>
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Verification Criteria
+        </Typography>
         
-        <div className="space-y-4 mb-6">
+        <List>
           {verificationData.criteria.map((criterion) => (
-            <div key={criterion.id} className="p-4 border rounded-lg">
-              <div className="flex items-start">
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-900">{criterion.description}</span>
-                    {criterion.required ? (
-                      <span className="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">Required</span>
-                    ) : (
-                      <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">Optional</span>
-                    )}
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox h-5 w-5 text-blue-600"
-                      checked={criterion.verified}
-                      onChange={(e) => handleCriterionVerification(criterion.id, e.target.checked)}
-                      disabled={isSubmitting}
-                    />
-                    <span className="ml-2 text-gray-700">Verified</span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Comments
-                </label>
-                <textarea
-                  className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  rows="2"
-                  placeholder="Add any comments about this criterion..."
-                  value={criterion.comment}
-                  onChange={(e) => handleCriterionComment(criterion.id, e.target.value)}
-                  disabled={isSubmitting}
-                ></textarea>
-              </div>
-            </div>
+            <ListItem key={criterion.id} disablePadding sx={{ mb: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} display="flex" alignItems="center">
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={criterion.verified}
+                        onChange={(e) => handleCriterionVerification(criterion.id, e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body1">
+                          {criterion.description}
+                          {criterion.required && (
+                            <Chip
+                              label="Required"
+                              color="error"
+                              size="small"
+                              sx={{ ml: 1 }}
+                            />
+                          )}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Comments on this criterion (optional)"
+                    value={criterion.comment}
+                    onChange={(e) => handleCriterionComment(criterion.id, e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </Grid>
+              </Grid>
+            </ListItem>
           ))}
-        </div>
+        </List>
+      </Paper>
+      
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Quality Assessment
+        </Typography>
         
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Overall Verification Comments
-          </label>
-          <textarea
-            className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-            rows="4"
-            placeholder="Add any overall comments about this milestone verification..."
-            value={verificationData.comment}
-            onChange={handleCommentChange}
-            disabled={isSubmitting}
-          ></textarea>
-        </div>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Typography variant="body2" gutterBottom>
+              Completion Level
+            </Typography>
+            <Rating
+              name="completionRating"
+              value={verificationData.completionRating}
+              onChange={(e, newValue) => handleRatingChange('completionRating', newValue)}
+              disabled={isSubmitting}
+            />
+            <FormHelperText>
+              How fully was the milestone completed?
+            </FormHelperText>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Typography variant="body2" gutterBottom>
+              Documentation Quality
+            </Typography>
+            <Rating
+              name="documentationRating"
+              value={verificationData.documentationRating}
+              onChange={(e, newValue) => handleRatingChange('documentationRating', newValue)}
+              disabled={isSubmitting}
+            />
+            <FormHelperText>
+              How well is the completion documented?
+            </FormHelperText>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Typography variant="body2" gutterBottom>
+              Overall Quality
+            </Typography>
+            <Rating
+              name="qualityRating"
+              value={verificationData.qualityRating}
+              onChange={(e, newValue) => handleRatingChange('qualityRating', newValue)}
+              disabled={isSubmitting}
+            />
+            <FormHelperText>
+              How would you rate the quality of work?
+            </FormHelperText>
+          </Grid>
+        </Grid>
+      </Paper>
+      
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Additional Comments
+        </Typography>
         
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 mr-3"
-            disabled={isSubmitting}
-            onClick={() => window.history.back()}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            disabled={isSubmitting || !isFormValid()}
-          >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </>
-            ) : 'Submit Verification'}
-          </button>
-        </div>
-      </form>
-    </div>
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          placeholder="Add any overall comments or feedback about this milestone verification"
+          value={verificationData.comment}
+          onChange={handleCommentChange}
+          disabled={isSubmitting}
+        />
+      </Paper>
+      
+      <Box sx={{ mb: 3 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={verificationData.verified}
+              onChange={handleVerifiedChange}
+              color="primary"
+              disabled={isSubmitting}
+            />
+          }
+          label={
+            <Typography variant="body2">
+              I confirm that I have reviewed the milestone details and supporting documents,
+              and my verification assessment is accurate to the best of my knowledge.
+            </Typography>
+          }
+        />
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={isSubmitting || !isFormValid()}
+          startIcon={isSubmitting ? <CircularProgress size={20} /> : <VerifiedIcon />}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Verification'}
+        </Button>
+      </Box>
+    </Box>
   );
 };
 

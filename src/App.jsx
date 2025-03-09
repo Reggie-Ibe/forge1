@@ -1,4 +1,4 @@
-// src/App.jsx with escrow management routes
+// src/App.jsx with updated routes
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 
@@ -20,9 +20,11 @@ import ProjectDetail from './pages/ProjectDetail';
 import AddMilestone from './pages/AddMilestone';
 import EditMilestone from './pages/EditMilestone';
 import MilestoneVerification from './pages/MilestoneVerification';
+import MilestoneSubmission from './components/projects/MilestoneSubmission';
 import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Wallet from './pages/Wallet';
+import InnovatorProfile from './components/profiles/InnovatorProfile';
 import RoleBasedRedirect from './components/auth/RoleBasedRedirect';
 
 // Admin pages
@@ -32,6 +34,9 @@ import RuleConfiguration from './components/admin/RuleConfiguration';
 import AdminPaymentMethods from './pages/AdminPaymentMethods';
 import AdminUserManagement from './components/admin/AdminUserManagement';
 import UserVerification from './components/admin/UserVerification';
+import PendingProjectApproval from './components/admin/PendingProjectApproval';
+import AdminMilestoneVerification from './components/admin/AdminMilestoneVerification';
+import EscrowManagement from './components/admin/EscrowManagement';
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -145,6 +150,15 @@ function App() {
           </ProtectedRoute>
         } />
 
+        {/* Innovator Profile Viewing - Available to all authenticated users */}
+        <Route path="/innovators/:id" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <InnovatorProfile />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
         {/* Projects routes */}
         <Route path="/projects" element={
           <ProtectedRoute>
@@ -194,7 +208,16 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* New milestone verification route */}
+        {/* New milestone submission route */}
+        <Route path="/projects/:projectId/milestones/:milestoneId/submit" element={
+          <ProtectedRoute allowedRoles={['innovator']}>
+            <MainLayout>
+              <MilestoneSubmission />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Milestone verification route for investors and admins */}
         <Route path="/projects/:projectId/milestones/:milestoneId/verify" element={
           <ProtectedRoute allowedRoles={['investor', 'admin']}>
             <MainLayout>
@@ -254,6 +277,15 @@ function App() {
           </ProtectedRoute>
         } />
 
+        {/* Admin Project Approval Route */}
+        <Route path="/admin/projects/pending" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <PendingProjectApproval />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
         <Route path="/admin/projects" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
@@ -273,7 +305,16 @@ function App() {
         <Route path="/admin/projects/:projectId/escrow" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
-              <AdminEscrowManagement />
+              <EscrowManagement />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Admin milestone verification route */}
+        <Route path="/admin/projects/:projectId/milestones/:milestoneId/verification" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <AdminMilestoneVerification />
             </MainLayout>
           </ProtectedRoute>
         } />

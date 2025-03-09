@@ -1,6 +1,7 @@
-// src/components/dashboard/AdminDashboard.jsx
+// src/components/dashboard/AdminDashboard.jsx - Updated to integrate project approval
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Material UI components
 import {
@@ -42,18 +43,19 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import BlockIcon from '@mui/icons-material/Block';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningIcon from '@mui/icons-material/Warning';
 
 // Import admin components
 import AdminProjects from '../admin/AdminProjects';
 import AdminUserManagement from '../admin/AdminUserManagement';
 import AdminSettings from '../admin/AdminSettings';
 import UserVerification from '../admin/UserVerification';
+import PendingProjectApproval from '../admin/PendingProjectApproval';
+import EscrowManagement from '../admin/EscrowManagement';
 
 // Import escrow management and payment methods
 import AdminPaymentMethods from '../../pages/AdminPaymentMethods';
-
-// Import auth context
-import { useAuth } from '../../contexts/AuthContext';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -62,6 +64,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [flashMessage, setFlashMessage] = useState('');
   const [stats, setStats] = useState({
     users: { 
       total: 0, 
@@ -73,10 +76,39 @@ const AdminDashboard = () => {
       approved: 0,
       rejected: 0 
     },
-    projects: { total: 0, active: 0, pending: 0, completed: 0 },
+    projects: { 
+      total: 0, 
+      active: 0, 
+      pending: 0,
+      pending_approval: 0, 
+      completed: 0 
+    },
     transactions: { total: 0, deposits: 0, investments: 0, disbursements: 0 },
-    milestones: { total: 0, completed: 0, inProgress: 0, pending: 0 }
+    milestones: { 
+      total: 0, 
+      completed: 0, 
+      inProgress: 0, 
+      pending: 0,
+      pendingVerification: 0
+    }
   });
+  
+  // Check for messages passed via location state
+  useEffect(() => {
+    if (location.state?.message) {
+      setFlashMessage(location.state.message);
+      
+      // Clear the location state to prevent message reappearing on refresh
+      window.history.replaceState({}, document.title);
+      
+      // Clear flash message after 5 seconds
+      const timer = setTimeout(() => {
+        setFlashMessage('');
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
   
   useEffect(() => {
     // Map location to tab index
@@ -133,6 +165,7 @@ const AdminDashboard = () => {
             total: projectsData.length,
             active: projectsData.filter(p => p.status === 'active').length,
             pending: projectsData.filter(p => p.status === 'pending').length,
+            pending_approval: projectsData.filter(p => p.status === 'pending_approval').length,
             completed: projectsData.filter(p => p.status === 'completed').length
           }
         }));
@@ -204,6 +237,16 @@ const AdminDashboard = () => {
   };
   
   const renderContent = () => {
+    // Check if we're on a specific path first
+    if (location.pathname.includes('/admin/projects/pending')) {
+      return <PendingProjectApproval />;
+    }
+    
+    if (location.pathname.match(/\/admin\/projects\/\d+\/escrow/)) {
+      return <EscrowManagement />;
+    }
+    
+    // Otherwise, render based on tab index
     switch (activeTab) {
       case 1:
         return <AdminProjects />;
@@ -228,6 +271,12 @@ const AdminDashboard = () => {
         <Typography variant="h5" gutterBottom>
           Platform Overview
         </Typography>
+        
+        {flashMessage && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            {flashMessage}
+          </Alert>
+        )}
         
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -289,7 +338,7 @@ const AdminDashboard = () => {
                       sx={{ mr: 1, mb: 1 }}
                     />
                     <Chip
-                      label={`${stats.projects.pending} Pending`}
+                      label={`${stats.projects.pending_approval} Pending Approval`}
                       color="warning"
                       size="small"
                       sx={{ mr: 1, mb: 1 }}
@@ -377,19 +426,20 @@ const AdminDashboard = () => {
                       Manage all projects on the platform, approve pending projects, and release funds based on milestone completion.
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, p: 2 }}>
                     <Button size="small" component={Link} to="/admin/projects">
                       View All Projects
                     </Button>
-                    {stats.projects.pending > 0 && (
+                    {stats.projects.pending_approval > 0 && (
                       <Button 
                         size="small" 
                         variant="contained" 
                         color="warning"
                         component={Link} 
-                        to="/admin/projects?status=pending"
+                        to="/admin/projects/pending"
+                        startIcon={<WarningIcon />}
                       >
-                        Approve {stats.projects.pending} Pending Projects
+                        Approve {stats.projects.pending_approval} Pending Projects
                       </Button>
                     )}
                   </CardActions>
@@ -407,7 +457,7 @@ const AdminDashboard = () => {
                       Configure the platform's payment methods, including bank transfer and cryptocurrency options.
                     </Typography>
                   </CardContent>
-                  <CardActions>
+                  <CardActions sx={{ p: 2 }}>
                     <Button size="small" component={Link} to="/admin/wallet">
                       Payment Methods
                     </Button>
@@ -434,7 +484,7 @@ const AdminDashboard = () => {
                       Manage platform users, verify user accounts, and request identity documents for verification.
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, p: 2 }}>
                     <Button size="small" component={Link} to="/admin/users">
                       Manage Users
                     </Button>
@@ -464,7 +514,7 @@ const AdminDashboard = () => {
                       Manage escrow accounts, verify project milestones, and release funds to project owners based on completion.
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <CardActions sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, p: 2 }}>
                     <Button 
                       size="small" 
                       component={Link} 
@@ -479,6 +529,7 @@ const AdminDashboard = () => {
                         color="warning"
                         component={Link} 
                         to="/admin/projects?pendingVerification=true"
+                        startIcon={<CheckCircleIcon />}
                       >
                         Verify {stats.milestones.pendingVerification} Milestones
                       </Button>
@@ -498,7 +549,7 @@ const AdminDashboard = () => {
                       Configure system-wide settings, security options, and platform parameters.
                     </Typography>
                   </CardContent>
-                  <CardActions>
+                  <CardActions sx={{ p: 2 }}>
                     <Button size="small" component={Link} to="/admin/settings">
                       System Settings
                     </Button>
@@ -518,7 +569,7 @@ const AdminDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" color="warning.main">
-                        {stats.projects.pending}
+                        {stats.projects.pending_approval}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Pending Projects
@@ -529,7 +580,7 @@ const AdminDashboard = () => {
                         color="warning"
                         sx={{ mt: 1 }}
                         component={Link} 
-                        to="/admin/projects?status=pending"
+                        to="/admin/projects/pending"
                       >
                         Approve Projects
                       </Button>

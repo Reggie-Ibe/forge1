@@ -151,6 +151,26 @@
       "timeline": "June 2025 - Spread PCs to 25% of students in selected areas\n",
       "impact": "25% of students own PCs",
       "id": 3
+    },
+    {
+      "userId": 1,
+      "title": "Sustainable Farming",
+      "description": "Provide sustainable seeds to third world country farms",
+      "category": "AgTech",
+      "fundingGoal": 60000,
+      "currentFunding": 40000,
+      "status": "active",
+      "createdAt": "2025-03-09T14:18:50.147Z",
+      "sdgs": [
+        11,
+        8
+      ],
+      "timeline": "Build 500 sustainable farms by 2026",
+      "impact": "Provide farmers with sustainable farming. utilities andd equipmets",
+      "projectProgress": 0,
+      "id": 4,
+      "approvedBy": 3,
+      "approvedAt": "2025-03-09T14:29:38.321Z"
     }
   ],
   "investments": [
@@ -246,6 +266,15 @@
       "status": "completed",
       "createdAt": "2025-03-04T15:06:36.518Z",
       "id": 3
+    },
+    {
+      "userId": 2,
+      "projectId": 4,
+      "amount": 40000,
+      "note": "",
+      "status": "completed",
+      "createdAt": "2025-03-09T14:31:00.538Z",
+      "id": 4
     }
   ],
   "milestones": [
@@ -455,6 +484,39 @@
         }
       ],
       "verificationRequired": 3
+    },
+    {
+      "title": "Start. workshops and sign on participating. farmers",
+      "description": "Find participating farmers",
+      "startDate": "2025-03-11",
+      "dueDate": "2025-05-07",
+      "completionPercentage": 25,
+      "estimatedFunding": 15000,
+      "projectId": 4,
+      "status": "pending",
+      "id": 7
+    },
+    {
+      "title": "Start process of germination",
+      "description": "Supply equipment and start mass planting",
+      "startDate": "2025-06-12",
+      "dueDate": "2025-06-12",
+      "completionPercentage": "50",
+      "estimatedFunding": "30000",
+      "projectId": 4,
+      "status": "pending",
+      "id": 8
+    },
+    {
+      "title": "Supply first portions of seeds for planting and educate them on processes",
+      "description": "Educate them to first world. practices",
+      "startDate": "2025-06-15",
+      "dueDate": "2025-07-13",
+      "completionPercentage": 25,
+      "estimatedFunding": 15000,
+      "projectId": 4,
+      "status": "pending",
+      "id": 9
     }
   ],
   "verifications": [
@@ -848,6 +910,15 @@
       "status": "completed",
       "createdAt": "2025-03-04T15:06:37.187Z",
       "id": 6
+    },
+    {
+      "userId": 2,
+      "type": "investment",
+      "amount": -40000,
+      "projectId": 4,
+      "status": "completed",
+      "createdAt": "2025-03-09T14:31:01.168Z",
+      "id": 7
     }
   ],
   "systemSettings": {

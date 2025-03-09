@@ -1,4 +1,4 @@
-// src/components/projects/ProjectForm.jsx
+// src/components/projects/ProjectForm.jsx - Unified approach
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -22,12 +22,32 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Divider
 } from '@mui/material';
 
 // Material UI icons
 import SaveIcon from '@mui/icons-material/Save';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CategoryIcon from '@mui/icons-material/Category';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 // SDG data
 const sdgOptions = [
@@ -65,7 +85,7 @@ const categoryOptions = [
   'Circular Economy',
 ];
 
-const ProjectForm = ({ project = null, onSuccess }) => {
+const ProjectForm = ({ project = null, onSuccess, onActiveStepChange }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
@@ -79,11 +99,31 @@ const ProjectForm = ({ project = null, onSuccess }) => {
     sdgs: project?.sdgs ? sdgOptions.filter(sdg => project.sdgs.includes(sdg.id)) : [],
     timeline: project?.timeline || '',
     impact: project?.impact || '',
+    milestones: project?.milestones || []
   });
+  
+  // Milestone dialog state
+  const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false);
+  const [editingMilestoneIndex, setEditingMilestoneIndex] = useState(-1);
+  const [milestoneData, setMilestoneData] = useState({
+    title: '',
+    description: '',
+    startDate: '',
+    dueDate: '',
+    completionPercentage: 25,
+    estimatedFunding: 0
+  });
+  
+  // Submission confirmation dialog
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [createdProject, setCreatedProject] = useState(null);
   
   // Form validation
   const [errors, setErrors] = useState({});
+  const [milestoneErrors, setMilestoneErrors] = useState({});
   
+  // Validate each step
   const validateStep = (step) => {
     const newErrors = {};
     
@@ -99,22 +139,80 @@ const ProjectForm = ({ project = null, onSuccess }) => {
     } else if (step === 2) {
       if (!formData.timeline.trim()) newErrors.timeline = 'Timeline is required';
       if (!formData.impact.trim()) newErrors.impact = 'Impact description is required';
+      if (formData.milestones.length === 0) newErrors.milestones = 'At least one milestone is required';
+      
+      // Check if milestone percentages add up to 100%
+      const totalPercentage = formData.milestones.reduce((sum, milestone) => 
+        sum + parseFloat(milestone.completionPercentage || 0), 0);
+        
+      if (Math.abs(totalPercentage - 100) > 0.1) {
+        newErrors.milestones = `Milestone completion percentages must add up to 100%. Current total: ${totalPercentage}%`;
+      }
     }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
+  // Validate milestone data
+  const validateMilestone = () => {
+    const newErrors = {};
+    
+    if (!milestoneData.title.trim()) newErrors.title = 'Title is required';
+    if (!milestoneData.description.trim()) newErrors.description = 'Description is required';
+    if (!milestoneData.startDate) newErrors.startDate = 'Start date is required';
+    if (!milestoneData.dueDate) newErrors.dueDate = 'Due date is required';
+    if (milestoneData.startDate && milestoneData.dueDate && 
+        new Date(milestoneData.startDate) > new Date(milestoneData.dueDate)) {
+      newErrors.dueDate = 'Due date must be after start date';
+    }
+    if (!milestoneData.completionPercentage) newErrors.completionPercentage = 'Completion percentage is required';
+    if (milestoneData.completionPercentage <= 0) newErrors.completionPercentage = 'Completion percentage must be greater than 0';
+    if (!milestoneData.estimatedFunding && milestoneData.estimatedFunding !== 0) {
+      newErrors.estimatedFunding = 'Estimated funding is required';
+    }
+    if (milestoneData.estimatedFunding < 0) {
+      newErrors.estimatedFunding = 'Estimated funding cannot be negative';
+    }
+    
+    // Check if total percentages (excluding the current milestone if editing) exceed 100%
+    let currentTotal = 0;
+    formData.milestones.forEach((milestone, index) => {
+      if (editingMilestoneIndex === -1 || index !== editingMilestoneIndex) {
+        currentTotal += parseFloat(milestone.completionPercentage || 0);
+      }
+    });
+    
+    const newTotal = currentTotal + parseFloat(milestoneData.completionPercentage || 0);
+    if (newTotal > 100) {
+      newErrors.completionPercentage = `Total completion percentage cannot exceed 100%. Current total with this milestone: ${newTotal}%`;
+    }
+    
+    setMilestoneErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  // Handle next step
   const handleNext = () => {
     if (validateStep(activeStep)) {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      const newStep = activeStep + 1;
+      setActiveStep(newStep);
+      if (onActiveStepChange) {
+        onActiveStepChange(newStep);
+      }
     }
   };
   
+  // Handle back step
   const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    const newStep = activeStep - 1;
+    setActiveStep(newStep);
+    if (onActiveStepChange) {
+      onActiveStepChange(newStep);
+    }
   };
   
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -125,6 +223,18 @@ const ProjectForm = ({ project = null, onSuccess }) => {
     }
   };
   
+  // Handle milestone input changes
+  const handleMilestoneChange = (e) => {
+    const { name, value } = e.target;
+    setMilestoneData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when field is updated
+    if (milestoneErrors[name]) {
+      setMilestoneErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+  
+  // Handle SDG selection
   const handleSDGChange = (event, newValue) => {
     setFormData(prev => ({ ...prev, sdgs: newValue }));
     if (errors.sdgs) {
@@ -132,10 +242,75 @@ const ProjectForm = ({ project = null, onSuccess }) => {
     }
   };
   
-  const handleSubmit = async (e) => {
+  // Open milestone dialog
+  const handleOpenMilestoneDialog = (index = -1) => {
+    if (index >= 0) {
+      // Edit existing milestone
+      setEditingMilestoneIndex(index);
+      setMilestoneData(formData.milestones[index]);
+    } else {
+      // Add new milestone
+      setEditingMilestoneIndex(-1);
+      
+      // Calculate reasonable defaults
+      const estimatedFunding = formData.fundingGoal ? Math.round(formData.fundingGoal / 4) : 0;
+      const remainingPercentage = 100 - formData.milestones.reduce((sum, m) => 
+        sum + parseFloat(m.completionPercentage || 0), 0);
+      
+      setMilestoneData({
+        title: '',
+        description: '',
+        startDate: '',
+        dueDate: '',
+        completionPercentage: Math.max(Math.min(remainingPercentage, 25), 0), // Default 25% or remaining percentage
+        estimatedFunding: estimatedFunding
+      });
+    }
+    setMilestoneDialogOpen(true);
+  };
+  
+  // Save milestone
+  const handleSaveMilestone = () => {
+    if (!validateMilestone()) return;
+    
+    const updatedMilestones = [...formData.milestones];
+    
+    if (editingMilestoneIndex >= 0) {
+      // Update existing milestone
+      updatedMilestones[editingMilestoneIndex] = milestoneData;
+    } else {
+      // Add new milestone
+      updatedMilestones.push(milestoneData);
+    }
+    
+    // Sort milestones by due date
+    updatedMilestones.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    
+    setFormData(prev => ({ ...prev, milestones: updatedMilestones }));
+    setMilestoneDialogOpen(false);
+    
+    // Clear any milestone errors in the main form
+    if (errors.milestones) {
+      setErrors(prev => ({ ...prev, milestones: '' }));
+    }
+  };
+  
+  // Delete milestone
+  const handleDeleteMilestone = (index) => {
+    const updatedMilestones = formData.milestones.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, milestones: updatedMilestones }));
+  };
+  
+  // Open submission dialog
+  const handleOpenConfirmDialog = (e) => {
     e.preventDefault();
     if (!validateStep(activeStep)) return;
     
+    setSubmissionDialogOpen(true);
+  };
+  
+  // Submit the project
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     setError('');
     
@@ -150,11 +325,12 @@ const ProjectForm = ({ project = null, onSuccess }) => {
         category: formData.category,
         fundingGoal: Number(formData.fundingGoal),
         currentFunding: project?.currentFunding || 0,
-        status: 'pending',
+        status: project ? project.status : 'pending_approval',
         createdAt: project?.createdAt || new Date().toISOString(),
         sdgs: formData.sdgs.map(sdg => sdg.id),
         timeline: formData.timeline,
         impact: formData.impact,
+        projectProgress: project?.projectProgress || 0,
       };
       
       // Update existing project or create new one
@@ -178,23 +354,89 @@ const ProjectForm = ({ project = null, onSuccess }) => {
       
       const savedProject = await response.json();
       
-      if (onSuccess) {
-        onSuccess(savedProject);
+      // Now save the milestones
+      if (formData.milestones.length > 0) {
+        const milestonePromises = formData.milestones.map(milestone => {
+          const milestoneData = {
+            ...milestone,
+            projectId: savedProject.id,
+            status: 'pending'
+          };
+          
+          return fetch(`${apiUrl}/milestones`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(milestoneData),
+          });
+        });
+        
+        await Promise.all(milestonePromises);
+      }
+      
+      setCreatedProject(savedProject);
+      
+      // Show success dialog for new projects
+      if (!project) {
+        setSubmissionSuccess(true);
       } else {
-        navigate(`/projects/${savedProject.id}`);
+        // For updates, call the success callback directly
+        if (onSuccess) {
+          onSuccess(savedProject);
+        } else {
+          navigate(`/projects/${savedProject.id}`);
+        }
       }
     } catch (err) {
       console.error('Error saving project:', err);
       setError('Failed to save project. Please try again later.');
+      setSubmissionDialogOpen(false);
     } finally {
       setIsSubmitting(false);
     }
   };
   
+  // Handle close of confirmation dialog
+  const handleConfirmationClose = () => {
+    setSubmissionDialogOpen(false);
+    
+    if (submissionSuccess) {
+      if (onSuccess) {
+        onSuccess(createdProject);
+      } else {
+        navigate(`/projects`, {
+          state: { message: 'Project submitted successfully and is awaiting admin approval.' }
+        });
+      }
+    }
+  };
+  
+  // Format currency
+  const formatCurrency = (value) => {
+    if (!value && value !== 0) return '$0';
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+  
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+  
   // Step content
   const getStepContent = (step) => {
     switch (step) {
-      case 0:
+      case 0: // Basic Information
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -256,7 +498,7 @@ const ProjectForm = ({ project = null, onSuccess }) => {
             </Grid>
           </Grid>
         );
-      case 1:
+      case 1: // Funding & Goals
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -313,7 +555,7 @@ const ProjectForm = ({ project = null, onSuccess }) => {
             </Grid>
           </Grid>
         );
-      case 2:
+      case 2: // Timeline & Impact
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -346,6 +588,88 @@ const ProjectForm = ({ project = null, onSuccess }) => {
                 disabled={isSubmitting}
               />
             </Grid>
+            
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Milestones</Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleOpenMilestoneDialog()}
+                  disabled={isSubmitting}
+                >
+                  Add Milestone
+                </Button>
+              </Box>
+              
+              {errors.milestones && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {errors.milestones}
+                </Alert>
+              )}
+              
+              {formData.milestones.length > 0 ? (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Milestone</TableCell>
+                        <TableCell>Due Date</TableCell>
+                        <TableCell align="right">Completion %</TableCell>
+                        <TableCell align="right">Est. Funding</TableCell>
+                        <TableCell align="right">Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {formData.milestones.map((milestone, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              {milestone.title}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {milestone.description.substring(0, 50)}
+                              {milestone.description.length > 50 ? '...' : ''}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(milestone.dueDate)}
+                          </TableCell>
+                          <TableCell align="right">
+                            {milestone.completionPercentage}%
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatCurrency(milestone.estimatedFunding)}
+                          </TableCell>
+                          <TableCell align="right">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenMilestoneDialog(index)}
+                              disabled={isSubmitting}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteMilestone(index)}
+                              disabled={isSubmitting}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Alert severity="info">
+                  No milestones added yet. Click "Add Milestone" to define project milestones.
+                </Alert>
+              )}
+            </Grid>
           </Grid>
         );
       default:
@@ -371,7 +695,7 @@ const ProjectForm = ({ project = null, onSuccess }) => {
         ))}
       </Stepper>
       
-      <form onSubmit={activeStep === steps.length - 1 ? handleSubmit : handleNext}>
+      <form onSubmit={activeStep === steps.length - 1 ? handleOpenConfirmDialog : handleNext}>
         <Box sx={{ mt: 2, mb: 4 }}>
           {getStepContent(activeStep)}
         </Box>
@@ -391,10 +715,221 @@ const ProjectForm = ({ project = null, onSuccess }) => {
             disabled={isSubmitting}
             startIcon={activeStep === steps.length - 1 ? (isSubmitting ? <CircularProgress size={20} /> : <SaveIcon />) : null}
           >
-            {activeStep === steps.length - 1 ? (project ? 'Update Project' : 'Create Project') : 'Next'}
+            {activeStep === steps.length - 1 ? (project ? 'Update Project' : 'Submit Project') : 'Next'}
           </Button>
         </Box>
       </form>
+
+      {/* Milestone Dialog */}
+      <Dialog
+        open={milestoneDialogOpen}
+        onClose={() => setMilestoneDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingMilestoneIndex >= 0 ? 'Edit Milestone' : 'Add Milestone'}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 0 }}>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                label="Milestone Title"
+                name="title"
+                value={milestoneData.title}
+                onChange={handleMilestoneChange}
+                error={!!milestoneErrors.title}
+                helperText={milestoneErrors.title}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                label="Description"
+                name="description"
+                multiline
+                rows={2}
+                value={milestoneData.description}
+                onChange={handleMilestoneChange}
+                error={!!milestoneErrors.description}
+                helperText={milestoneErrors.description}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                label="Start Date"
+                name="startDate"
+                type="date"
+                value={milestoneData.startDate}
+                onChange={handleMilestoneChange}
+                error={!!milestoneErrors.startDate}
+                helperText={milestoneErrors.startDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CalendarTodayIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                label="Due Date"
+                name="dueDate"
+                type="date"
+                value={milestoneData.dueDate}
+                onChange={handleMilestoneChange}
+                error={!!milestoneErrors.dueDate}
+                helperText={milestoneErrors.dueDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CalendarTodayIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                label="Completion Percentage"
+                name="completionPercentage"
+                type="number"
+                value={milestoneData.completionPercentage}
+                onChange={handleMilestoneChange}
+                error={!!milestoneErrors.completionPercentage}
+                helperText={milestoneErrors.completionPercentage || 'Percentage this milestone contributes to overall project completion'}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                fullWidth
+                label="Estimated Funding"
+                name="estimatedFunding"
+                type="number"
+                value={milestoneData.estimatedFunding}
+                onChange={handleMilestoneChange}
+                error={!!milestoneErrors.estimatedFunding}
+                helperText={milestoneErrors.estimatedFunding || 'Estimated funding to be released upon completion'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AttachMoneyIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+        <Button onClick={() => setMilestoneDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={handleSaveMilestone}
+          >
+            Save Milestone
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Submission Confirmation Dialog */}
+      <Dialog
+        open={submissionDialogOpen}
+        onClose={isSubmitting ? undefined : handleConfirmationClose}
+        aria-labelledby="project-submission-dialog-title"
+      >
+        <DialogTitle id="project-submission-dialog-title">
+          {submissionSuccess ? "Project Submitted Successfully" : "Confirm Project Submission"}
+        </DialogTitle>
+        <DialogContent>
+          {!submissionSuccess ? (
+            <>
+              <DialogContentText>
+                Are you ready to submit your project for review? Once submitted, your project will be reviewed by our administration team before becoming visible to investors.
+              </DialogContentText>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2">Project Details:</Typography>
+                <Typography variant="body2"><strong>Title:</strong> {formData.title}</Typography>
+                <Typography variant="body2"><strong>Category:</strong> {formData.category}</Typography>
+                <Typography variant="body2"><strong>Funding Goal:</strong> ${Number(formData.fundingGoal).toLocaleString()}</Typography>
+                <Typography variant="body2"><strong>SDGs:</strong> {formData.sdgs.map(sdg => sdg.name).join(', ')}</Typography>
+                <Typography variant="body2"><strong>Milestones:</strong> {formData.milestones.length}</Typography>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon color="success" sx={{ fontSize: 40, mr: 1.5 }} />
+                <Typography variant="h6">
+                  Your project has been submitted!
+                </Typography>
+              </Box>
+              <DialogContentText>
+                Your project "{formData.title}" has been submitted successfully and is now pending approval. You will be notified once it has been reviewed by our team. You can track the status of your submission in your projects dashboard.
+              </DialogContentText>
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <HourglassEmptyIcon sx={{ mr: 1 }} />
+                  <Typography variant="body2">
+                    Current Status: <strong>Pending Approval</strong>
+                  </Typography>
+                </Box>
+              </Alert>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {!submissionSuccess ? (
+            <>
+              <Button onClick={handleConfirmationClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                variant="contained"
+                color="primary"
+                disabled={isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Project'}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={handleConfirmationClose} variant="contained" color="primary">
+              Go to Projects
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

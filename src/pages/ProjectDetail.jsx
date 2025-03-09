@@ -1,128 +1,95 @@
-// src/pages/ProjectDetail.jsx - Updated with milestone management
+// src/pages/ProjectDetail.jsx
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 // Material UI components
 import {
-  Box,
   Container,
+  Box,
   Typography,
-  Grid,
   Paper,
-  Chip,
   Button,
+  Alert,
+  CircularProgress,
+  Grid,
+  Chip,
   Divider,
-  LinearProgress,
   Tabs,
   Tab,
+  LinearProgress,
+  Card,
+  CardContent,
+  Avatar,
   List,
   ListItem,
   ListItemText,
-  Avatar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  TextField,
-  InputAdornment,
-  CircularProgress,
-  Alert,
-  Card,
-  CardContent,
-  IconButton,
+  ListItemIcon,
   Tooltip,
+  IconButton
 } from '@mui/material';
 
 // Material UI icons
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import CategoryIcon from '@mui/icons-material/Category';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import EmailIcon from '@mui/icons-material/Email';
+import BusinessIcon from '@mui/icons-material/Business';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import PersonIcon from '@mui/icons-material/Person';
+import InfoIcon from '@mui/icons-material/Info';
+import CategoryIcon from '@mui/icons-material/Category';
+import LanguageIcon from '@mui/icons-material/Language';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import ChatIcon from '@mui/icons-material/Chat';
 
-// Custom components
+// Import our new components
 import MilestoneList from '../components/projects/MilestoneList';
-
-// SDG color mapping
-const sdgColors = {
-  1: '#E5243B', // No Poverty
-  2: '#DDA63A', // Zero Hunger
-  3: '#4C9F38', // Good Health
-  4: '#C5192D', // Quality Education
-  5: '#FF3A21', // Gender Equality
-  6: '#26BDE2', // Clean Water
-  7: '#FCC30B', // Affordable Energy
-  8: '#A21942', // Decent Work
-  9: '#FD6925', // Industry & Innovation
-  10: '#DD1367', // Reduced Inequalities
-  11: '#FD9D24', // Sustainable Cities
-  12: '#BF8B2E', // Responsible Consumption
-  13: '#3F7E44', // Climate Action
-  14: '#0A97D9', // Life Below Water
-  15: '#56C02B', // Life on Land
-  16: '#00689D', // Peace & Justice
-  17: '#19486A', // Partnerships
-};
-
-// SDG names
-const sdgNames = {
-  1: 'No Poverty',
-  2: 'Zero Hunger',
-  3: 'Good Health and Well-being',
-  4: 'Quality Education',
-  5: 'Gender Equality',
-  6: 'Clean Water and Sanitation',
-  7: 'Affordable and Clean Energy',
-  8: 'Decent Work and Economic Growth',
-  9: 'Industry, Innovation, and Infrastructure',
-  10: 'Reduced Inequalities',
-  11: 'Sustainable Cities and Communities',
-  12: 'Responsible Consumption and Production',
-  13: 'Climate Action',
-  14: 'Life Below Water',
-  15: 'Life on Land',
-  16: 'Peace, Justice, and Strong Institutions',
-  17: 'Partnerships for the Goals',
-};
+import MilestoneTimeline from '../components/escrow/MilestoneTimeline';
+import VerificationStatusBoard from '../components/escrow/VerificationStatusBoard';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
   const [project, setProject] = useState(null);
-  const [projectOwner, setProjectOwner] = useState(null);
+  const [innovator, setInnovator] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [investments, setInvestments] = useState([]);
+  const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const [flashMessage, setFlashMessage] = useState('');
   
-  // Dialogs
-  const [showInvestDialog, setShowInvestDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showContactDialog, setShowContactDialog] = useState(false);
-  
-  // Investment form
-  const [investmentAmount, setInvestmentAmount] = useState('');
-  const [investmentNote, setInvestmentNote] = useState('');
-  const [investmentError, setInvestmentError] = useState('');
-  const [isInvesting, setIsInvesting] = useState(false);
-  
-  // Contact form
-  const [messageContent, setMessageContent] = useState('');
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
-  const [messageError, setMessageError] = useState('');
-  
-  // Delete project
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Success message
-  const [successMessage, setSuccessMessage] = useState('');
+  // Check for any message passed via location state
+  useEffect(() => {
+    if (location.state?.message) {
+      setFlashMessage(location.state.message);
+      
+      // Set initial tab if provided
+      if (location.state?.tab !== undefined) {
+        setActiveTab(location.state.tab);
+      }
+      
+      // Clear the location state to prevent message reappearing on refresh
+      window.history.replaceState({}, document.title);
+    }
+    
+    // Clear flash message after 5 seconds
+    if (flashMessage) {
+      const timer = setTimeout(() => {
+        setFlashMessage('');
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location, flashMessage]);
   
   useEffect(() => {
     fetchProjectData();
@@ -130,7 +97,6 @@ const ProjectDetail = () => {
   
   const fetchProjectData = async () => {
     setLoading(true);
-    setError('');
     
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -140,14 +106,15 @@ const ProjectDetail = () => {
       if (!projectResponse.ok) {
         throw new Error('Project not found');
       }
+      
       const projectData = await projectResponse.json();
       setProject(projectData);
       
-      // Fetch project owner
-      const ownerResponse = await fetch(`${apiUrl}/users/${projectData.userId}`);
-      if (ownerResponse.ok) {
-        const ownerData = await ownerResponse.json();
-        setProjectOwner(ownerData);
+      // Fetch user/innovator data
+      const userResponse = await fetch(`${apiUrl}/users/${projectData.userId}`);
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setInnovator(userData);
       }
       
       // Fetch milestones
@@ -155,17 +122,36 @@ const ProjectDetail = () => {
       if (milestonesResponse.ok) {
         const milestonesData = await milestonesResponse.json();
         setMilestones(milestonesData);
+        
+        // Fetch verifications for milestones that are completed
+        const completedMilestoneIds = milestonesData
+          .filter(m => m.status === 'completed')
+          .map(m => m.id);
+        
+        if (completedMilestoneIds.length > 0) {
+          const verificationsPromises = completedMilestoneIds.map(milestoneId => 
+            fetch(`${apiUrl}/verifications?milestoneId=${milestoneId}`)
+              .then(res => res.ok ? res.json() : [])
+          );
+          
+          const verificationsResults = await Promise.all(verificationsPromises);
+          const allVerifications = verificationsResults.flat();
+          setVerifications(allVerifications);
+        }
       }
       
-      // Fetch investments
-      const investmentsResponse = await fetch(`${apiUrl}/investments?projectId=${id}`);
-      if (investmentsResponse.ok) {
-        const investmentsData = await investmentsResponse.json();
-        setInvestments(investmentsData);
+      // Fetch investments if user is investor or admin, or project owner
+      if (user.role === 'investor' || user.role === 'admin' || user.id === projectData.userId) {
+        const investmentsResponse = await fetch(`${apiUrl}/investments?projectId=${id}`);
+        if (investmentsResponse.ok) {
+          const investmentsData = await investmentsResponse.json();
+          setInvestments(investmentsData);
+        }
       }
+      
     } catch (err) {
       console.error('Error fetching project data:', err);
-      setError('Failed to load project. ' + err.message);
+      setError(err.message || 'Failed to load project data');
     } finally {
       setLoading(false);
     }
@@ -175,179 +161,47 @@ const ProjectDetail = () => {
     setActiveTab(newValue);
   };
   
-  const handleInvestSubmit = async () => {
-    setInvestmentError('');
+  // Handle milestone updates
+  const handleMilestoneUpdate = (updatedMilestones) => {
+    setMilestones(updatedMilestones);
     
-    if (!investmentAmount || parseFloat(investmentAmount) <= 0) {
-      setInvestmentError('Please enter a valid investment amount');
-      return;
+    // If project progress depends on milestone completion, recalculate
+    if (project) {
+      const completedMilestones = updatedMilestones.filter(
+        m => m.status === 'completed' && m.adminApproved
+      );
+      
+      const totalProgress = completedMilestones.reduce(
+        (sum, milestone) => sum + (milestone.completionPercentage || 0), 
+        0
+      );
+      
+      // If progress has changed, update project
+      if (totalProgress !== project.projectProgress) {
+        updateProjectProgress(totalProgress);
+      }
     }
-    
-    setIsInvesting(true);
-    
+  };
+  
+  // Update project progress in the database
+  const updateProjectProgress = async (progress) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       
-      // Create investment record
-      const investmentData = {
-        userId: user.id,
-        projectId: parseInt(id),
-        amount: parseFloat(investmentAmount),
-        note: investmentNote,
-        status: 'completed',
-        createdAt: new Date().toISOString()
-      };
-      
-      const investmentResponse = await fetch(`${apiUrl}/investments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(investmentData),
-      });
-      
-      if (!investmentResponse.ok) {
-        throw new Error('Failed to process investment');
-      }
-      
-      // Update project funding
-      const updatedProject = {
-        ...project,
-        currentFunding: project.currentFunding + parseFloat(investmentAmount)
-      };
-      
-      const projectResponse = await fetch(`${apiUrl}/projects/${id}`, {
+      await fetch(`${apiUrl}/projects/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ currentFunding: updatedProject.currentFunding }),
+        body: JSON.stringify({ projectProgress: progress }),
       });
       
-      if (!projectResponse.ok) {
-        throw new Error('Failed to update project funding');
-      }
+      // Update local state
+      setProject(prev => ({ ...prev, projectProgress: progress }));
       
-      // Add wallet transaction
-      const walletTransactionData = {
-        userId: user.id,
-        type: 'investment',
-        amount: -parseFloat(investmentAmount),
-        projectId: parseInt(id),
-        status: 'completed',
-        createdAt: new Date().toISOString()
-      };
-      
-      const walletResponse = await fetch(`${apiUrl}/walletTransactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(walletTransactionData),
-      });
-      
-      if (!walletResponse.ok) {
-        console.warn('Failed to record wallet transaction');
-      }
-      
-      // Update state
-      setProject(updatedProject);
-      setInvestments([...investments, investmentData]);
-      setShowInvestDialog(false);
-      setInvestmentAmount('');
-      setInvestmentNote('');
-      setSuccessMessage('Investment successfully processed!');
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000);
     } catch (err) {
-      console.error('Error processing investment:', err);
-      setInvestmentError('Failed to process investment. Please try again later.');
-    } finally {
-      setIsInvesting(false);
+      console.error('Error updating project progress:', err);
     }
-  };
-  
-  const handleSendMessage = async () => {
-    setMessageError('');
-    
-    if (!messageContent.trim()) {
-      setMessageError('Please enter a message');
-      return;
-    }
-    
-    setIsSendingMessage(true);
-    
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
-      // Create message
-      const messageData = {
-        senderId: user.id,
-        receiverId: projectOwner.id,
-        content: messageContent,
-        createdAt: new Date().toISOString(),
-        read: false
-      };
-      
-      const response = await fetch(`${apiUrl}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messageData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-      
-      setShowContactDialog(false);
-      setMessageContent('');
-      setSuccessMessage('Message sent successfully!');
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000);
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setMessageError('Failed to send message. Please try again later.');
-    } finally {
-      setIsSendingMessage(false);
-    }
-  };
-  
-  const handleDeleteProject = async () => {
-    setIsDeleting(true);
-    
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      
-      const response = await fetch(`${apiUrl}/projects/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete project');
-      }
-      
-      // Navigate back to projects list
-      navigate('/projects', { state: { message: 'Project deleted successfully' } });
-    } catch (err) {
-      console.error('Error deleting project:', err);
-      setError('Failed to delete project. Please try again later.');
-      setShowDeleteDialog(false);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-  
-  // Handle milestone updates
-  const handleMilestoneUpdate = (updatedMilestones) => {
-    setMilestones(updatedMilestones);
   };
   
   // Format currency
@@ -362,11 +216,36 @@ const ProjectDetail = () => {
   
   // Format date
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
-    });
+    }).format(date);
+  };
+  
+  // Check permissions for project editing
+  const canEditProject = user && (user.id === project?.userId || user.role === 'admin');
+  
+  // SDG color mapping
+  const sdgColors = {
+    1: '#E5243B', // No Poverty
+    2: '#DDA63A', // Zero Hunger
+    3: '#4C9F38', // Good Health
+    4: '#C5192D', // Quality Education
+    5: '#FF3A21', // Gender Equality
+    6: '#26BDE2', // Clean Water
+    7: '#FCC30B', // Affordable Energy
+    8: '#A21942', // Decent Work
+    9: '#FD6925', // Industry & Innovation
+    10: '#DD1367', // Reduced Inequalities
+    11: '#FD9D24', // Sustainable Cities
+    12: '#BF8B2E', // Responsible Consumption
+    13: '#3F7E44', // Climate Action
+    14: '#0A97D9', // Life Below Water
+    15: '#56C02B', // Life on Land
+    16: '#00689D', // Peace & Justice
+    17: '#19486A', // Partnerships
   };
   
   if (loading) {
@@ -396,17 +275,31 @@ const ProjectDetail = () => {
     );
   }
   
-  if (!project) return null;
-  
-  // Calculate funding progress
-  const fundingProgress = (project.currentFunding / project.fundingGoal) * 100;
-  const isOwner = user?.id === project.userId;
-  const isInvestor = user?.role === 'investor';
-  const isAdmin = user?.role === 'admin';
+  if (!project) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Project not found.
+        </Alert>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/projects')}
+        >
+          Back to Projects
+        </Button>
+      </Container>
+    );
+  }
   
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Back button */}
+      {flashMessage && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {flashMessage}
+        </Alert>
+      )}
+      
       <Button
         variant="text"
         startIcon={<ArrowBackIcon />}
@@ -415,67 +308,72 @@ const ProjectDetail = () => {
       >
         Back to Projects
       </Button>
-
-      {/* Success Message */}
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          {successMessage}
-        </Alert>
-      )}
       
-      {/* Project header */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Box>
-                <Typography variant="h4" component="h1" gutterBottom>
-                  {project.title}
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  <Chip
-                    icon={<CategoryIcon />}
-                    label={project.category}
-                    color="primary"
-                  />
-                  <Chip
-                    icon={<CalendarTodayIcon />}
-                    label={`Created ${formatDate(project.createdAt)}`}
-                    variant="outlined"
-                  />
-                  <Chip
-                    label={project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                    color={
-                      project.status === 'active'
-                        ? 'success'
-                        : project.status === 'pending'
-                        ? 'warning'
-                        : 'default'
-                    }
-                  />
-                </Box>
-              </Box>
+              <Typography variant="h4" component="h1" gutterBottom>
+                {project.title}
+              </Typography>
               
-              {isOwner && (
-                <Box>
-                  <Tooltip title="Edit Project">
-                    <IconButton
-                      color="primary"
-                      onClick={() => navigate(`/projects/${id}/edit`)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete Project">
-                    <IconButton
-                      color="error"
-                      onClick={() => setShowDeleteDialog(true)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+              {canEditProject && (
+                <Button
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  component={Link}
+                  to={`/projects/${id}/edit`}
+                  size="small"
+                >
+                  Edit Project
+                </Button>
               )}
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Chip
+                icon={<CategoryIcon />}
+                label={project.category}
+                variant="outlined"
+                sx={{ mr: 1 }}
+              />
+              
+              <Chip
+                color={
+                  project.status === 'active' ? 'success' :
+                  project.status === 'pending' || project.status === 'pending_approval' ? 'warning' :
+                  project.status === 'completed' ? 'primary' :
+                  'default'
+                }
+                label={
+                  project.status === 'pending_approval' ? 'Pending Approval' :
+                  project.status.charAt(0).toUpperCase() + project.status.slice(1)
+                }
+                variant="outlined"
+              />
+              
+              {/* Display creation date */}
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                <CalendarTodayIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+                <Typography variant="body2" color="text.secondary">
+                  Created: {formatDate(project.createdAt)}
+                </Typography>
+              </Box>
+            </Box>
+            
+            {/* Display SDGs */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {project.sdgs?.map((sdg) => (
+                <Chip
+                  key={sdg}
+                  label={`SDG ${sdg}`}
+                  size="small"
+                  sx={{
+                    bgcolor: sdgColors[sdg] || '#888888',
+                    color: 'white',
+                  }}
+                />
+              ))}
             </Box>
             
             <Typography variant="body1" paragraph>
@@ -484,389 +382,440 @@ const ProjectDetail = () => {
           </Grid>
           
           <Grid item xs={12} md={4}>
-            <Card sx={{ mb: 2 }}>
+            {/* Innovator/Project Owner Card */}
+            <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Funding Progress
-                </Typography>
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatCurrency(project.currentFunding)} raised
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                    {innovator?.firstName?.[0] || 'U'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6">
+                      {innovator 
+                        ? `${innovator.firstName} ${innovator.lastName}` 
+                        : 'Unknown Innovator'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {formatCurrency(project.fundingGoal)} goal
+                      Project Innovator
                     </Typography>
                   </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min(fundingProgress, 100)}
-                    sx={{ height: 10, borderRadius: 5 }}
+                </Box>
+                
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<PersonIcon />}
+                    component={Link}
+                    to={`/innovators/${project.userId}`}
+                  >
+                    View Profile
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<ChatIcon />}
+                    component={Link}
+                    to={`/messages?contact=${project.userId}`}
+                  >
+                    Contact
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+            
+            {/* Project Progress & Funding Card */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Project Status
+                </Typography>
+                
+                {/* Project Progress */}
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="body2">Project Progress</Typography>
+                    <Typography variant="body2">{project.projectProgress || 0}%</Typography>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={project.projectProgress || 0} 
+                    sx={{ height: 8, borderRadius: 5 }}
+                    color="success"
                   />
-                  <Typography variant="body2" align="right" sx={{ mt: 0.5 }}>
-                    {fundingProgress.toFixed(1)}% funded
+                </Box>
+                
+                {/* Funding Progress */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="body2">Funding Progress</Typography>
+                    <Typography variant="body2">
+                      {formatCurrency(project.currentFunding)} / {formatCurrency(project.fundingGoal)}
+                    </Typography>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={(project.currentFunding / project.fundingGoal) * 100} 
+                    sx={{ height: 8, borderRadius: 5 }}
+                  />
+                  <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.5 }}>
+                    {((project.currentFunding / project.fundingGoal) * 100).toFixed(1)}% funded
                   </Typography>
                 </Box>
                 
-                {projectOwner && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ mr: 2 }}>
-                      {projectOwner.firstName?.[0]}{projectOwner.lastName?.[0]}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2">
-                        {projectOwner.firstName} {projectOwner.lastName}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Project Owner
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-                
-                {isInvestor && !isOwner && (
+                {/* Investment Actions */}
+                {user.role === 'investor' && project.status === 'active' && (
                   <Button
                     variant="contained"
                     fullWidth
                     startIcon={<AttachMoneyIcon />}
-                    onClick={() => setShowInvestDialog(true)}
+                    sx={{ mt: 1 }}
+                    component={Link}
+                    to={`/projects/${id}/invest`}
                   >
                     Invest in Project
                   </Button>
                 )}
                 
-                {!isOwner && (
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<EmailIcon />}
-                    onClick={() => setShowContactDialog(true)}
-                    sx={{ mt: 1 }}
-                  >
-                    Contact Owner
-                  </Button>
+                {/* Admin Actions */}
+                {user.role === 'admin' && (
+                  <Box sx={{ mt: 2 }}>
+                    <Divider sx={{ mb: 2 }} />
+                    <Typography variant="subtitle2" gutterBottom>
+                      Admin Actions
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      startIcon={<AccountBalanceIcon />}
+                      fullWidth
+                      sx={{ mb: 1 }}
+                      component={Link}
+                      to={`/admin/projects/${id}/escrow`}
+                    >
+                      Escrow Management
+                    </Button>
+                  </Box>
                 )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  SDG Contributions
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {project.sdgs?.map((sdgId) => (
-                    <Chip
-                      key={sdgId}
-                      label={sdgNames[sdgId] || `SDG ${sdgId}`}
-                      sx={{
-                        backgroundColor: sdgColors[sdgId] || '#888888',
-                        color: 'white',
-                      }}
-                    />
-                  ))}
-                </Box>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
       </Paper>
       
-      {/* Tabs section */}
-      <Box sx={{ width: '100%', mb: 3 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={activeTab} onChange={handleTabChange} aria-label="project tabs">
-            <Tab label="Overview" id="tab-0" />
-            <Tab label="Timeline" id="tab-1" />
-            <Tab label={`Investments (${investments.length})`} id="tab-2" />
-          </Tabs>
-        </Box>
-        
-        {/* Overview tab */}
-        <TabPanel value={activeTab} index={0}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <Typography variant="h6" gutterBottom>
-                Project Impact
-              </Typography>
-              <Typography variant="body1" paragraph>
-                {project.impact || 'No impact description provided.'}
-              </Typography>
-              
-              <Divider sx={{ my: 3 }} />
-              
-              <Typography variant="h6" gutterBottom>
-                Key Features
-              </Typography>
-              <ul>
-                <li>
-                  <Typography variant="body1">
-                    Category: {project.category}
-                  </Typography>
-                </li>
-                <li>
-                  <Typography variant="body1">
-                    Funding Goal: {formatCurrency(project.fundingGoal)}
-                  </Typography>
-                </li>
-                <li>
-                  <Typography variant="body1">
-                    Current Funding: {formatCurrency(project.currentFunding)}
-                  </Typography>
-                </li>
-                <li>
-                  <Typography variant="body1">
-                    Created: {formatDate(project.createdAt)}
-                  </Typography>
-                </li>
-              </ul>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Project Statistics
-                  </Typography>
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Investments
-                    </Typography>
-                    <Typography variant="h5" sx={{ mb: 1 }}>
-                      {investments.length}
-                    </Typography>
-                    
-                    <Typography variant="body2" color="text.secondary">
-                      Funding Progress
-                    </Typography>
-                    <Typography variant="h5" sx={{ mb: 1 }}>
-                      {fundingProgress.toFixed(1)}%
-                    </Typography>
-                    
-                    <Typography variant="body2" color="text.secondary">
-                      Remaining to Goal
-                    </Typography>
-                    <Typography variant="h5">
-                      {formatCurrency(Math.max(0, project.fundingGoal - project.currentFunding))}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
-        
-        {/* Timeline tab */}
-        <TabPanel value={activeTab} index={1}>
-          <MilestoneList 
-            milestones={milestones}
-            projectId={id}
-            projectOwnerId={project.userId}
-            onMilestoneUpdate={handleMilestoneUpdate}
-          />
-        </TabPanel>
-        
-        {/* Investments tab */}
-        <TabPanel value={activeTab} index={2}>
-          {investments.length === 0 ? (
-            <Typography variant="body1" color="text.secondary">
-              No investments have been made to this project yet.
-            </Typography>
-          ) : (
-            <List>
-              {investments.map((investment) => (
-                <ListItem
-                  key={investment.id}
-                  divider
-                  secondaryAction={
-                    <Chip
-                      icon={<CheckCircleIcon />}
-                      label="Completed"
-                      color="success"
-                      variant="outlined"
-                    />
-                  }
-                >
-                  <ListItemText
-                    primary={
-                      <>
-                        <Typography variant="subtitle1" component="span">
-                          {formatCurrency(investment.amount)}
-                        </Typography>
-                        {investment.note && (
-                          <Typography variant="body2" component="p" sx={{ mt: 1 }}>
-                            "{investment.note}"
-                          </Typography>
-                        )}
-                      </>
-                    }
-                    secondary={
-                      <Typography variant="caption">
-                        Invested on {formatDate(investment.createdAt)}
-                      </Typography>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          )}
-          
-          {isInvestor && !isOwner && (
-            <Box sx={{ mt: 3 }}>
-              <Button
-                variant="contained"
-                startIcon={<AttachMoneyIcon />}
-                onClick={() => setShowInvestDialog(true)}
-              >
-                Invest in Project
-              </Button>
-            </Box>
-          )}
-        </TabPanel>
+      {/* Tabs for Project Details */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange}>
+          <Tab label="Overview" />
+          <Tab label="Timeline" />
+          <Tab label="Financials" />
+          <Tab label="Documents" />
+        </Tabs>
       </Box>
       
-      {/* Investment Dialog */}
-      <Dialog open={showInvestDialog} onClose={() => setShowInvestDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Invest in {project.title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Your investment will help this project reach its funding goal of {formatCurrency(project.fundingGoal)}.
-          </DialogContentText>
-          
-          {investmentError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {investmentError}
-            </Alert>
-          )}
-          
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Investment Amount"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={investmentAmount}
-            onChange={(e) => setInvestmentAmount(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <AttachMoneyIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ mb: 2 }}
-          />
-          
-          <TextField
-            margin="dense"
-            label="Note (Optional)"
-            type="text"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={3}
-            value={investmentNote}
-            onChange={(e) => setInvestmentNote(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowInvestDialog(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleInvestSubmit}
-            disabled={isInvesting}
-            startIcon={isInvesting ? <CircularProgress size={20} /> : null}
-          >
-            {isInvesting ? 'Processing...' : 'Invest'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Contact Dialog */}
-      <Dialog open={showContactDialog} onClose={() => setShowContactDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Contact Project Owner</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mb: 2 }}>
-            Send a message to {projectOwner?.firstName} {projectOwner?.lastName} about their project.
-          </DialogContentText>
-          
-          {messageError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {messageError}
-            </Alert>
-          )}
-          
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Message"
-            type="text"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={4}
-            value={messageContent}
-            onChange={(e) => setMessageContent(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowContactDialog(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleSendMessage}
-            disabled={isSendingMessage}
-            startIcon={isSendingMessage ? <CircularProgress size={20} /> : <EmailIcon />}
-          >
-            {isSendingMessage ? 'Sending...' : 'Send Message'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
-        <DialogTitle>Delete Project</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleDeleteProject}
-            disabled={isDeleting}
-            startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
-          >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Tab Contents */}
+      <Box sx={{ mb: 4 }}>
+        {/* Overview Tab */}
+        {activeTab === 0 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 3, height: '100%' }}>
+                <Typography variant="h6" gutterBottom>
+                  Impact
+                </Typography>
+                <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                  {project.impact}
+                </Typography>
+              </Paper>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 3, height: '100%' }}>
+                <Typography variant="h6" gutterBottom>
+                  Timeline
+                </Typography>
+                <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                  {project.timeline}
+                </Typography>
+              </Paper>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Project Milestones Overview
+                </Typography>
+                {milestones.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 2 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      No milestones have been defined for this project yet.
+                    </Typography>
+                    
+                    {canEditProject && project.status === 'active' && (
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        component={Link}
+                        to={`/projects/${id}/milestones/add`}
+                        sx={{ mt: 2 }}
+                      >
+                        Add First Milestone
+                      </Button>
+                    )}
+                  </Box>
+                ) : (
+                  <List>
+                    {milestones.slice(0, 3).map((milestone) => (
+                      <ListItem 
+                        key={milestone.id}
+                        secondaryAction={
+                          <Tooltip title="View Details">
+                            <IconButton 
+                              edge="end" 
+                              onClick={() => setActiveTab(1)}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
+                        }
+                      >
+                        <ListItemIcon>
+                          {milestone.status === 'completed' && milestone.adminApproved ? (
+                            <Chip size="small" color="success" label="Completed" />
+                          ) : milestone.status === 'completed' && !milestone.adminApproved ? (
+                            <Chip size="small" color="warning" label="Awaiting Verification" />
+                          ) : milestone.status === 'inProgress' ? (
+                            <Chip size="small" color="primary" label="In Progress" />
+                          ) : (
+                            <Chip size="small" color="default" label="Pending" />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={milestone.title}
+                          secondary={`Due: ${formatDate(milestone.dueDate)}`}
+                        />
+                      </ListItem>
+                    ))}
+                    
+                    {milestones.length > 3 && (
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => setActiveTab(1)}
+                        sx={{ mt: 1 }}
+                      >
+                        View All {milestones.length} Milestones
+                      </Button>
+                    )}
+                  </List>
+                )}
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+        
+        {/* Timeline Tab */}
+        {activeTab === 1 && (
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6">
+                Project Timeline & Milestones
+              </Typography>
+              
+              {canEditProject && project.status === 'active' && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  component={Link}
+                  to={`/projects/${id}/milestones/add`}
+                >
+                  Add Milestone
+                </Button>
+              )}
+            </Box>
+            
+            {/* Integrate MilestoneList component */}
+            <MilestoneList 
+              milestones={milestones}
+              projectId={id}
+              projectOwnerId={project.userId}
+              onMilestoneUpdate={handleMilestoneUpdate}
+              projectStatus={project.status}
+            />
+          </Paper>
+        )}
+        
+        {/* Financials Tab */}
+        {activeTab === 2 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Financial Details
+            </Typography>
+            
+            <Grid container spacing={3}>
+              {/* Financial summary */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Funding Summary
+                    </Typography>
+                    
+                    <List>
+                      <ListItem>
+                        <ListItemText 
+                          primary="Funding Goal" 
+                          secondary={formatCurrency(project.fundingGoal)} 
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText 
+                          primary="Current Funding" 
+                          secondary={formatCurrency(project.currentFunding)} 
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText 
+                          primary="Funding Remaining" 
+                          secondary={formatCurrency(project.fundingGoal - project.currentFunding)} 
+                        />
+                      </ListItem>
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* Investments */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Milestone Funding Details
+                    </Typography>
+                    
+                    {milestones.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No milestones defined yet.
+                      </Typography>
+                    ) : (
+                      <List dense>
+                        {milestones.map(milestone => (
+                          <ListItem key={milestone.id}>
+                            <ListItemText
+                              primary={milestone.title}
+                              secondary={`Estimated Funding: ${formatCurrency(milestone.estimatedFunding || 0)}`}
+                            />
+                            <Chip
+                              size="small"
+                              label={
+                                milestone.status === 'completed' && milestone.adminApproved ? 'Funded' :
+                                milestone.status === 'completed' && !milestone.adminApproved ? 'Pending Approval' :
+                                'Not Released'
+                              }
+                              color={
+                                milestone.status === 'completed' && milestone.adminApproved ? 'success' :
+                                milestone.status === 'completed' && !milestone.adminApproved ? 'warning' :
+                                'default'
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* Milestone Timeline - Advanced view for investors & admins */}
+              {(user.role === 'investor' || user.role === 'admin' || user.id === project.userId) && (
+                <Grid item xs={12}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Funding Release Timeline
+                      </Typography>
+                      
+                      <MilestoneTimeline 
+                        projectId={id}
+                        milestones={milestones}
+                        investments={investments}
+                      />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+            </Grid>
+          </Paper>
+        )}
+        
+        {/* Documents Tab */}
+        {activeTab === 3 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Project Documents
+            </Typography>
+            
+            {/* For milestones with verification documents */}
+            {milestones.some(m => m.status === 'completed' && m.verificationDocuments?.length > 0) ? (
+              <Grid container spacing={3}>
+                {milestones
+                  .filter(m => m.status === 'completed' && m.verificationDocuments?.length > 0)
+                  .map(milestone => (
+                    <Grid item xs={12} key={milestone.id}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="subtitle1">{milestone.title}</Typography>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {milestone.adminApproved ? 'Verified & Completed' : 'Awaiting Verification'}
+                          </Typography>
+                          
+                          <List dense>
+                            {milestone.verificationDocuments.map((doc, index) => (
+                              <ListItem key={index}>
+                                <ListItemIcon>
+                                  <AttachFileIcon />
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={doc.name}
+                                  secondary={`Uploaded on ${formatDate(doc.uploadedAt)}`}
+                                />
+                                <Button
+                                  size="small"
+                                  component="a"
+                                  href={doc.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  View
+                                </Button>
+                              </ListItem>
+                            ))}
+                          </List>
+                          
+                          {/* Verification History */}
+                          {milestone.status === 'completed' && (
+                            <Box sx={{ mt: 2 }}>
+                              <VerificationStatusBoard
+                                milestone={milestone}
+                                verifications={verifications.filter(v => v.milestoneId === milestone.id)}
+                              />
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+              </Grid>
+            ) : (
+              <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
+                No project documents available yet. Documents will be added as milestones are completed.
+              </Typography>
+            )}
+          </Paper>
+        )}
+      </Box>
     </Container>
   );
 };
-
-// Tab Panel component
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-  
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`tabpanel-${index}`}
-      aria-labelledby={`tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
 
 export default ProjectDetail;

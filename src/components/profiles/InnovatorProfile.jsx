@@ -76,10 +76,16 @@ const InnovatorProfile = () => {
       const projectsResponse = await fetch(`${apiUrl}/projects?userId=${id}`);
       if (projectsResponse.ok) {
         const projectsData = await projectsResponse.json();
-        setProjects(projectsData);
+        
+        // Filter out pending_approval projects for non-owners/non-admins
+        const filteredProjects = projectsData.filter(project => 
+          project.status !== 'pending_approval'
+        );
+        
+        setProjects(filteredProjects);
         
         // Fetch milestones for all projects
-        const milestonesPromises = projectsData.map(project => 
+        const milestonesPromises = filteredProjects.map(project => 
           fetch(`${apiUrl}/milestones?projectId=${project.id}&status=completed&adminApproved=true`)
             .then(res => res.ok ? res.json() : [])
         );
@@ -161,6 +167,10 @@ const InnovatorProfile = () => {
       }
     });
     return Array.from(sdgSet).sort((a, b) => a - b);
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
   if (loading) {
@@ -287,7 +297,7 @@ const InnovatorProfile = () => {
       <Box sx={{ mb: 3 }}>
         <Tabs 
           value={activeTab} 
-          onChange={(e, newValue) => setActiveTab(newValue)}
+          onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
         >
@@ -392,6 +402,14 @@ const InnovatorProfile = () => {
                     </Card>
                   </Grid>
                 ))}
+
+                {getActiveProjects().length === 0 && (
+                  <Grid item xs={12}>
+                    <Alert severity="info">
+                      No active projects at the moment.
+                    </Alert>
+                  </Grid>
+                )}
               </Grid>
               
               {getCompletedProjects().length > 0 && (
@@ -473,13 +491,15 @@ const InnovatorProfile = () => {
                   </Card>
                 </Grid>
               ))}
+
+              {getAllSDGs().length === 0 && (
+                <Grid item xs={12}>
+                  <Alert severity="info">
+                    No SDG information available for this innovator's projects.
+                  </Alert>
+                </Grid>
+              )}
             </Grid>
-            
-            {getAllSDGs().length === 0 && (
-              <Typography variant="body1" color="text.secondary" align="center">
-                No impact areas found for this innovator's projects.
-              </Typography>
-            )}
           </Paper>
           
           <Paper sx={{ p: 3 }}>

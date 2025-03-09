@@ -53,7 +53,7 @@ const MilestoneSubmission = () => {
   
   // Form state
   const [completionDetails, setCompletionDetails] = useState('');
-  const [actualCompletionDate, setActualCompletionDate] = useState(new Date());
+  const [actualCompletionDate, setActualCompletionDate] = useState(new Date().toISOString().split('T')[0]);
   const [completionPercentage, setCompletionPercentage] = useState(100);
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -127,7 +127,9 @@ const MilestoneSubmission = () => {
   };
   
   const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
+    if (validateStep(activeStep)) {
+      setActiveStep((prevStep) => prevStep + 1);
+    }
   };
   
   const handleBack = () => {
@@ -164,11 +166,14 @@ const MilestoneSubmission = () => {
         if (progress >= 100) clearInterval(interval);
       }, 300);
       
+      // In a real implementation, you would upload the files to your server/storage here
+      // For this example, we'll simulate successful uploads and create file metadata
+      
       // Prepare verification data
       const verificationData = {
         completionDetails,
-        actualCompletionDate: actualCompletionDate.toISOString(),
-        completedDate: actualCompletionDate.toISOString(),
+        actualCompletionDate,
+        completedDate: new Date().toISOString(),
         status: 'completed',
         adminApproved: false,
         verificationSubmitted: true,
@@ -176,7 +181,9 @@ const MilestoneSubmission = () => {
         verificationDocuments: files.map((file, index) => ({
           id: Date.now() + index,
           name: file.name,
-          fileUrl: `/uploads/milestones/${projectId}-${milestoneId}-${file.name}`,
+          size: file.size,
+          type: file.type,
+          fileUrl: `/uploads/milestones/${projectId}-${milestoneId}-${file.name.replace(/\s+/g, '-')}`,
           uploadedAt: new Date().toISOString()
         })),
         additionalNotes
@@ -245,8 +252,8 @@ const MilestoneSubmission = () => {
                   value={completionDetails}
                   onChange={(e) => setCompletionDetails(e.target.value)}
                   required
-                  error={completionDetails.trim() === ''}
-                  helperText={completionDetails.trim() === '' ? 'Please describe how this milestone was completed' : ''}
+                  error={completionDetails.trim() === '' && submitting}
+                  helperText={completionDetails.trim() === '' && submitting ? 'Please describe how this milestone was completed' : 'Describe in detail how you achieved this milestone and what outcomes were produced'}
                 />
               </Grid>
               
@@ -255,8 +262,8 @@ const MilestoneSubmission = () => {
                   label="Actual Completion Date"
                   type="date"
                   fullWidth
-                  value={actualCompletionDate.toISOString().split('T')[0]}
-                  onChange={(e) => setActualCompletionDate(new Date(e.target.value))}
+                  value={actualCompletionDate}
+                  onChange={(e) => setActualCompletionDate(e.target.value)}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -287,6 +294,10 @@ const MilestoneSubmission = () => {
               Upload Verification Documents
             </Typography>
             
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Please upload relevant documents to verify milestone completion such as reports, screenshots, deliverables, or other evidence.
+            </Alert>
+            
             <Box sx={{ mb: 3 }}>
               <Button
                 variant="outlined"
@@ -303,7 +314,7 @@ const MilestoneSubmission = () => {
               </Button>
             </Box>
             
-            {files.length > 0 && (
+            {files.length > 0 ? (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Selected Files:
@@ -329,11 +340,9 @@ const MilestoneSubmission = () => {
                   ))}
                 </List>
               </Box>
-            )}
-            
-            {files.length === 0 && (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Please upload documents to verify milestone completion (screenshots, reports, deliverables, etc.)
+            ) : (
+              <Alert severity="warning" sx={{ mb: 3 }}>
+                No files selected. Please upload at least one document to verify your milestone completion.
               </Alert>
             )}
             

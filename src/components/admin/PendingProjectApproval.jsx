@@ -85,7 +85,21 @@ const PendingProjectApproval = () => {
       }
       
       const projects = await response.json();
-      setPendingProjects(projects);
+      
+      // Enhance projects with innovator names
+      const enhancedProjects = await Promise.all(projects.map(async (project) => {
+        const innovatorResponse = await fetch(`${apiUrl}/users/${project.userId}`);
+        if (innovatorResponse.ok) {
+          const innovator = await innovatorResponse.json();
+          return {
+            ...project,
+            innovatorName: `${innovator.firstName} ${innovator.lastName}`
+          };
+        }
+        return project;
+      }));
+      
+      setPendingProjects(enhancedProjects);
       
     } catch (err) {
       console.error('Error fetching pending projects:', err);
