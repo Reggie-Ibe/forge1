@@ -1,32 +1,8 @@
 // src/pages/Projects.jsx
+import './index.css';
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-
-// Material UI Components
-import {
-  Container,
-  Typography,
-  Box,
-  Button,
-  Alert,
-  CircularProgress,
-  Tabs,
-  Tab,
-  Paper,
-  Divider,
-  Grid,
-  Chip,
-  Card,
-  CardContent
-} from '@mui/material';
-
-// Material UI Icons
-import AddIcon from '@mui/icons-material/Add';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 
 // Custom Components
 import ProjectsList from '../components/projects/ProjectsList';
@@ -39,7 +15,7 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
+  const [sortBy, setSortBy] = useState('newest');
   
   // Project groupings
   const [activeProjects, setActiveProjects] = useState([]);
@@ -106,168 +82,6 @@ const Projects = () => {
     }
   };
   
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
-  
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 0: // All Projects
-        return (
-          <ProjectsList 
-            initialProjects={projects} 
-            isLoading={loading}
-          />
-        );
-      case 1: // Active Projects
-        return (
-          <ProjectsList 
-            initialProjects={activeProjects} 
-            isLoading={loading}
-          />
-        );
-      case 2: // Pending Approval
-        return (
-          <Box>
-            {pendingApprovalProjects.length === 0 ? (
-              <Paper sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h6" gutterBottom>No pending projects</Typography>
-                <Typography variant="body1" color="text.secondary">
-                  You don't have any projects awaiting approval.
-                </Typography>
-              </Paper>
-            ) : (
-              <Grid container spacing={3}>
-                {pendingApprovalProjects.map(project => (
-                  <Grid item xs={12} md={6} key={project.id}>
-                    <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                          <Typography variant="h6">{project.title}</Typography>
-                          <Chip 
-                            icon={<HourglassEmptyIcon />} 
-                            label="Pending Approval" 
-                            color="warning" 
-                            variant="outlined"
-                          />
-                        </Box>
-                        
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                          {project.description.substring(0, 150)}
-                          {project.description.length > 150 ? '...' : ''}
-                        </Typography>
-                        
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                          <Chip 
-                            label={project.category} 
-                            variant="outlined" 
-                            size="small"
-                          />
-                          {project.sdgs?.map(sdg => (
-                            <Chip
-                              key={sdg}
-                              label={`SDG ${sdg}`}
-                              size="small"
-                              sx={{
-                                bgcolor: getSdgColor(sdg),
-                                color: 'white',
-                              }}
-                            />
-                          ))}
-                        </Box>
-                        
-                        <Alert severity="info" sx={{ mb: 2 }}>
-                          <Typography variant="body2">
-                            This project is awaiting admin approval. You'll be notified once it's reviewed.
-                          </Typography>
-                        </Alert>
-                        
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component={Link}
-                            to={`/projects/${project.id}`}
-                          >
-                            View Details
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        );
-      case 3: // Rejected Projects
-        return (
-          <Box>
-            {rejectedProjects.length === 0 ? (
-              <Paper sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h6" gutterBottom>No rejected projects</Typography>
-                <Typography variant="body1" color="text.secondary">
-                  You don't have any rejected projects.
-                </Typography>
-              </Paper>
-            ) : (
-              <Grid container spacing={3}>
-                {rejectedProjects.map(project => (
-                  <Grid item xs={12} md={6} key={project.id}>
-                    <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                          <Typography variant="h6">{project.title}</Typography>
-                          <Chip 
-                            icon={<ErrorOutlineIcon />} 
-                            label="Rejected" 
-                            color="error" 
-                            variant="outlined"
-                          />
-                        </Box>
-                        
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                          {project.description.substring(0, 150)}
-                          {project.description.length > 150 ? '...' : ''}
-                        </Typography>
-                        
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                          <Typography variant="subtitle2">Rejection Reason:</Typography>
-                          <Typography variant="body2">
-                            {project.rejectionReason || 'No reason provided.'}
-                          </Typography>
-                        </Alert>
-                        
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component={Link}
-                            to={`/projects/${project.id}`}
-                          >
-                            View Details
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        );
-      case 4: // Completed Projects
-        return (
-          <ProjectsList 
-            initialProjects={completedProjects} 
-            isLoading={loading}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-  
   // Helper function for SDG colors
   const getSdgColor = (sdg) => {
     const sdgColors = {
@@ -294,89 +108,187 @@ const Projects = () => {
   };
   
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Projects
-        </Typography>
+    <div className="project-page">
+      <div className="project-header">
+        <h1>Projects</h1>
+        <div className="project-header-underline"></div>
+      </div>
+      
+      <div className="project-controls">
+        <div className="search-container">
+          <input 
+            type="text" 
+            placeholder="Search projects..." 
+            className="search-input"
+          />
+          <span className="search-icon">🔍</span>
+        </div>
         
-        {user.role === 'innovator' && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            component={Link}
-            to="/projects/create"
+        <button className="filter-button">
+          <span className="filter-icon">≡</span> Filters
+        </button>
+        
+        <div className="sort-container">
+          <label>Sort By</label>
+          <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="sort-select"
           >
-            Create Project
-          </Button>
-        )}
-      </Box>
+            <option value="newest">Newest</option>
+            <option value="funding">Funding</option>
+            <option value="alphabetical">Alphabetical</option>
+          </select>
+        </div>
+      </div>
       
       {statusMessage && (
-        <Alert 
-          severity="success" 
-          sx={{ mb: 3 }}
-          onClose={() => setStatusMessage('')}
-        >
+        <div className="status-message success">
           {statusMessage}
-        </Alert>
+        </div>
       )}
       
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <div className="status-message error">
           {error}
-        </Alert>
+        </div>
       )}
-      
-      <Paper sx={{ mb: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab icon={<BusinessCenterIcon />} iconPosition="start" label="All Projects" />
-          <Tab 
-            icon={<CheckCircleIcon color="success" />} 
-            iconPosition="start" 
-            label={`Active (${activeProjects.length})`} 
-          />
-          
-          {/* Only show pending approval tab for innovators and admins */}
-          {(user.role === 'innovator' || user.role === 'admin') && (
-            <Tab 
-              icon={<HourglassEmptyIcon color="warning" />} 
-              iconPosition="start" 
-              label={`Pending Approval (${pendingApprovalProjects.length})`} 
-            />
-          )}
-          
-          {/* Only show rejected tab for innovators and admins */}
-          {(user.role === 'innovator' || user.role === 'admin') && (
-            <Tab 
-              icon={<ErrorOutlineIcon color="error" />} 
-              iconPosition="start" 
-              label={`Rejected (${rejectedProjects.length})`} 
-            />
-          )}
-          
-          <Tab 
-            label={`Completed (${completedProjects.length})`} 
-          />
-        </Tabs>
-      </Paper>
       
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+        </div>
       ) : (
-        renderTabContent()
+        <div className="projects-grid">
+          <ProjectCard 
+            title="Waste to Energy Converter"
+            category="CleanTech"
+            description="Technology that transforms organic waste into biogas for cooking and electricity"
+            fundingProgress={30}
+            currentFunding={27000}
+            totalFunding={90000}
+            status="seeking"
+          />
+          
+          <ProjectCard 
+            title="Healthcare AI Diagnostics"
+            category="HealthTech"
+            description="Machine learning platform for early disease detection in low-resource settings"
+            fundingProgress={40}
+            currentFunding={80000}
+            totalFunding={200000}
+            status="partially"
+          />
+          
+          <ProjectCard 
+            title="Smart Agriculture System"
+            category="AgriTech"
+            description="Sustainable farming using IoT sensors and AI for crop optimization"
+            fundingProgress={20}
+            currentFunding={10000}
+            totalFunding={50000}
+            status="seeking"
+          />
+          
+          <ProjectCard 
+            title="Clean Water Initiative"
+            category="CleanTech"
+            description="Affordable water purification systems for rural communities"
+            fundingProgress={65}
+            currentFunding={130000}
+            totalFunding={200000}
+            status="partially"
+          />
+          
+          <ProjectCard 
+            title="Digital Education Platform"
+            category="EdTech"
+            description="Interactive learning tools for underserved communities"
+            fundingProgress={100}
+            currentFunding={150000}
+            totalFunding={150000}
+            status="fully"
+          />
+          
+          <ProjectCard 
+            title="Solar Micro-Grids"
+            category="CleanTech"
+            description="Distributed solar energy systems for off-grid communities"
+            fundingProgress={100}
+            currentFunding={75000}
+            totalFunding={75000}
+            status="fully"
+          />
+        </div>
       )}
-    </Container>
+    </div>
+  );
+};
+
+// ProjectCard Component
+const ProjectCard = ({ title, category, description, fundingProgress, currentFunding, totalFunding, status }) => {
+  let statusClass = '';
+  let statusText = '';
+  
+  switch(status) {
+    case 'seeking':
+      statusClass = 'seeking-funding';
+      statusText = 'Seeking Funding';
+      break;
+    case 'partially':
+      statusClass = 'partially-funded';
+      statusText = 'Partially Funded';
+      break;
+    case 'fully':
+      statusClass = 'fully-funded';
+      statusText = 'Fully Funded';
+      break;
+    default:
+      statusClass = 'seeking-funding';
+      statusText = 'Seeking Funding';
+  }
+  
+  return (
+    <div className="project-card">
+      <div className="project-image">
+        {/* Project image would go here */}
+        <div className={`project-status ${statusClass}`}>
+          {statusText}
+        </div>
+      </div>
+      
+      <div className="project-info">
+        <h2>{title}</h2>
+        <div className="project-category">
+          <span className="category-icon">🏢</span> {category}
+        </div>
+        <p className="project-description">{description}</p>
+        
+        <div className="funding-details">
+          <div className="funding-label">Funding Progress</div>
+          <div className="funding-numbers">
+            <span>${currentFunding.toLocaleString()}</span>
+            <span>of ${totalFunding.toLocaleString()}</span>
+          </div>
+          <div className="progress-bar-container">
+            <div 
+              className="progress-bar-fill" 
+              style={{ width: `${fundingProgress}%` }}
+            ></div>
+          </div>
+          <div className="funding-percentage">{fundingProgress}%</div>
+        </div>
+        
+        <div className="project-actions">
+          <button className="details-button">
+            <span className="eye-icon">👁️</span> Details
+          </button>
+          <button className="invest-button">
+            <span className="dollar-icon">$</span> Invest
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

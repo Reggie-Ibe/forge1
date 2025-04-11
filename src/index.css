@@ -1,64 +1,290 @@
 
-/* Custom base styles */
-@layer base {
-  body {
-    @apply text-gray-800 antialiased;
-  }
+/* Projects page styling */
+.project-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #fff;
+}
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-medium leading-tight;
+.project-header {
+  margin-bottom: 30px;
+}
+
+.project-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #ff3e3e;
+  margin-bottom: 5px;
+}
+
+.project-header-underline {
+  height: 3px;
+  background-color: #ff3e3e;
+  width: 100%;
+}
+
+.project-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.search-container {
+  flex-grow: 1;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 15px;
+  padding-left: 40px;
+  background-color: #191919;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #fff;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.filter-button {
+  background-color: transparent;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 10px 20px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.filter-icon {
+  font-weight: bold;
+}
+
+.sort-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sort-container label {
+  color: #888;
+  font-size: 14px;
+}
+
+.sort-select {
+  background-color: #191919;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 10px;
+  color: #fff;
+  appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+.status-message {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.status-message.success {
+  background-color: rgba(46, 125, 50, 0.2);
+  border: 1px solid #2e7d32;
+}
+
+.status-message.error {
+  background-color: rgba(211, 47, 47, 0.2);
+  border: 1px solid #d32f2f;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: #ff3e3e;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* Custom components */
-@layer components {
-  .btn-primary {
-    @apply py-2 px-4 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #333;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.project-image {
+  height: 160px;
+  background-color: #252525;
+  position: relative;
+}
+
+.project-status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.seeking-funding {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.partially-funded {
+  background-color: #ff9800;
+  color: black;
+}
+
+.fully-funded {
+  background-color: #4caf50;
+  color: white;
+}
+
+.project-info {
+  padding: 15px;
+}
+
+.project-info h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.project-category {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.project-description {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.funding-details {
+  margin-bottom: 15px;
+}
+
+.funding-label {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 5px;
+}
+
+.funding-numbers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.progress-bar-container {
+  height: 6px;
+  background-color: #333;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #ff3e3e;
+}
+
+.funding-percentage {
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.details-button, .invest-button {
+  flex: 1;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.details-button {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #ccc;
+}
+
+.invest-button {
+  background-color: #ff3e3e;
+  border: none;
+  color: white;
+}
+
+/* For smaller screens */
+@media (max-width: 768px) {
+  .project-controls {
+    flex-direction: column;
+    align-items: stretch;
   }
   
-  .btn-outline {
-    @apply py-2 px-4 bg-white text-gray-700 font-medium rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500;
-  }
-  
-  .input {
-    @apply w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-3;
-  }
-  
-  .card {
-    @apply bg-white shadow-sm rounded-lg p-6;
-  }
-  
-  .card-body {
-    @apply p-6;
+  .projects-grid {
+    grid-template-columns: 1fr;
   }
 }
-
-/* Remove default styling from previous template */
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-#root {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
-
-/* src/index.css */
-
-/* Only keep minimal custom styles needed */
-body {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
-    'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  text-decoration: none;
-}
-
