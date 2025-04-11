@@ -1,8 +1,15 @@
 // src/pages/Projects.jsx
-import './index.css';
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import '../index.css';
+
+// Material UI Icons
+import AddIcon from '@mui/icons-material/Add';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 
 // Custom Components
 import ProjectsList from '../components/projects/ProjectsList';
@@ -15,6 +22,7 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [activeTab, setActiveTab] = useState(0);
   const [sortBy, setSortBy] = useState('newest');
   
   // Project groupings
@@ -82,6 +90,134 @@ const Projects = () => {
     }
   };
   
+  const handleTabChange = (tabIndex) => {
+    setActiveTab(tabIndex);
+  };
+  
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 0: // All Projects
+        return (
+          <ProjectsList 
+            initialProjects={projects} 
+            isLoading={loading}
+          />
+        );
+      case 1: // Active Projects
+        return (
+          <ProjectsList 
+            initialProjects={activeProjects} 
+            isLoading={loading}
+          />
+        );
+      case 2: // Pending Approval
+        return (
+          <div className="pending-projects">
+            {pendingApprovalProjects.length === 0 ? (
+              <div className="empty-state">
+                <h2>No pending projects</h2>
+                <p>You don't have any projects awaiting approval.</p>
+              </div>
+            ) : (
+              <div className="projects-grid">
+                {pendingApprovalProjects.map(project => (
+                  <div className="project-card pending" key={project.id}>
+                    <div className="project-info">
+                      <div className="project-header-row">
+                        <h2>{project.title}</h2>
+                        <div className="status-badge pending">
+                          <HourglassEmptyIcon /> Pending Approval
+                        </div>
+                      </div>
+                      
+                      <p className="project-description">
+                        {project.description.substring(0, 150)}
+                        {project.description.length > 150 ? '...' : ''}
+                      </p>
+                      
+                      <div className="project-tags">
+                        <span className="category-tag">{project.category}</span>
+                        {project.sdgs?.map(sdg => (
+                          <span 
+                            key={sdg}
+                            className="sdg-tag"
+                            style={{ backgroundColor: getSdgColor(sdg) }}
+                          >
+                            SDG {sdg}
+                          </span>
+                        ))}
+                      </div>
+                      
+                      <div className="info-message">
+                        This project is awaiting admin approval. You'll be notified once it's reviewed.
+                      </div>
+                      
+                      <div className="project-actions">
+                        <Link to={`/projects/${project.id}`} className="details-button">
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case 3: // Rejected Projects
+        return (
+          <div className="rejected-projects">
+            {rejectedProjects.length === 0 ? (
+              <div className="empty-state">
+                <h2>No rejected projects</h2>
+                <p>You don't have any rejected projects.</p>
+              </div>
+            ) : (
+              <div className="projects-grid">
+                {rejectedProjects.map(project => (
+                  <div className="project-card rejected" key={project.id}>
+                    <div className="project-info">
+                      <div className="project-header-row">
+                        <h2>{project.title}</h2>
+                        <div className="status-badge rejected">
+                          <ErrorOutlineIcon /> Rejected
+                        </div>
+                      </div>
+                      
+                      <p className="project-description">
+                        {project.description.substring(0, 150)}
+                        {project.description.length > 150 ? '...' : ''}
+                      </p>
+                      
+                      <div className="error-message">
+                        <strong>Rejection Reason:</strong>
+                        <p>{project.rejectionReason || 'No reason provided.'}</p>
+                      </div>
+                      
+                      <div className="project-actions">
+                        <Link to={`/projects/${project.id}`} className="details-button">
+                          View Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case 4: // Completed Projects
+        return (
+          <ProjectsList 
+            initialProjects={completedProjects} 
+            isLoading={loading}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+  
   // Helper function for SDG colors
   const getSdgColor = (sdg) => {
     const sdgColors = {
@@ -112,6 +248,12 @@ const Projects = () => {
       <div className="project-header">
         <h1>Projects</h1>
         <div className="project-header-underline"></div>
+        
+        {user.role === 'innovator' && (
+          <Link to="/projects/create" className="create-button">
+            <AddIcon /> Create Project
+          </Link>
+        )}
       </div>
       
       <div className="project-controls">
@@ -144,150 +286,52 @@ const Projects = () => {
       
       {statusMessage && (
         <div className="status-message success">
+          <span className="close-icon" onClick={() => setStatusMessage('')}>×</span>
           {statusMessage}
         </div>
       )}
       
       {error && (
         <div className="status-message error">
+          <span className="close-icon" onClick={() => setError('')}>×</span>
           {error}
         </div>
       )}
+      
+      <div className="tabs-container">
+        <div className={`tab ${activeTab === 0 ? 'active' : ''}`} onClick={() => handleTabChange(0)}>
+          <BusinessCenterIcon /> All Projects
+        </div>
+        <div className={`tab ${activeTab === 1 ? 'active' : ''}`} onClick={() => handleTabChange(1)}>
+          <CheckCircleIcon className="success-icon" /> Active ({activeProjects.length})
+        </div>
+        
+        {/* Only show pending approval tab for innovators and admins */}
+        {(user.role === 'innovator' || user.role === 'admin') && (
+          <div className={`tab ${activeTab === 2 ? 'active' : ''}`} onClick={() => handleTabChange(2)}>
+            <HourglassEmptyIcon className="warning-icon" /> Pending ({pendingApprovalProjects.length})
+          </div>
+        )}
+        
+        {/* Only show rejected tab for innovators and admins */}
+        {(user.role === 'innovator' || user.role === 'admin') && (
+          <div className={`tab ${activeTab === 3 ? 'active' : ''}`} onClick={() => handleTabChange(3)}>
+            <ErrorOutlineIcon className="error-icon" /> Rejected ({rejectedProjects.length})
+          </div>
+        )}
+        
+        <div className={`tab ${activeTab === 4 ? 'active' : ''}`} onClick={() => handleTabChange(4)}>
+          Completed ({completedProjects.length})
+        </div>
+      </div>
       
       {loading ? (
         <div className="loading-container">
           <div className="loading-spinner"></div>
         </div>
       ) : (
-        <div className="projects-grid">
-          <ProjectCard 
-            title="Waste to Energy Converter"
-            category="CleanTech"
-            description="Technology that transforms organic waste into biogas for cooking and electricity"
-            fundingProgress={30}
-            currentFunding={27000}
-            totalFunding={90000}
-            status="seeking"
-          />
-          
-          <ProjectCard 
-            title="Healthcare AI Diagnostics"
-            category="HealthTech"
-            description="Machine learning platform for early disease detection in low-resource settings"
-            fundingProgress={40}
-            currentFunding={80000}
-            totalFunding={200000}
-            status="partially"
-          />
-          
-          <ProjectCard 
-            title="Smart Agriculture System"
-            category="AgriTech"
-            description="Sustainable farming using IoT sensors and AI for crop optimization"
-            fundingProgress={20}
-            currentFunding={10000}
-            totalFunding={50000}
-            status="seeking"
-          />
-          
-          <ProjectCard 
-            title="Clean Water Initiative"
-            category="CleanTech"
-            description="Affordable water purification systems for rural communities"
-            fundingProgress={65}
-            currentFunding={130000}
-            totalFunding={200000}
-            status="partially"
-          />
-          
-          <ProjectCard 
-            title="Digital Education Platform"
-            category="EdTech"
-            description="Interactive learning tools for underserved communities"
-            fundingProgress={100}
-            currentFunding={150000}
-            totalFunding={150000}
-            status="fully"
-          />
-          
-          <ProjectCard 
-            title="Solar Micro-Grids"
-            category="CleanTech"
-            description="Distributed solar energy systems for off-grid communities"
-            fundingProgress={100}
-            currentFunding={75000}
-            totalFunding={75000}
-            status="fully"
-          />
-        </div>
+        renderTabContent()
       )}
-    </div>
-  );
-};
-
-// ProjectCard Component
-const ProjectCard = ({ title, category, description, fundingProgress, currentFunding, totalFunding, status }) => {
-  let statusClass = '';
-  let statusText = '';
-  
-  switch(status) {
-    case 'seeking':
-      statusClass = 'seeking-funding';
-      statusText = 'Seeking Funding';
-      break;
-    case 'partially':
-      statusClass = 'partially-funded';
-      statusText = 'Partially Funded';
-      break;
-    case 'fully':
-      statusClass = 'fully-funded';
-      statusText = 'Fully Funded';
-      break;
-    default:
-      statusClass = 'seeking-funding';
-      statusText = 'Seeking Funding';
-  }
-  
-  return (
-    <div className="project-card">
-      <div className="project-image">
-        {/* Project image would go here */}
-        <div className={`project-status ${statusClass}`}>
-          {statusText}
-        </div>
-      </div>
-      
-      <div className="project-info">
-        <h2>{title}</h2>
-        <div className="project-category">
-          <span className="category-icon">🏢</span> {category}
-        </div>
-        <p className="project-description">{description}</p>
-        
-        <div className="funding-details">
-          <div className="funding-label">Funding Progress</div>
-          <div className="funding-numbers">
-            <span>${currentFunding.toLocaleString()}</span>
-            <span>of ${totalFunding.toLocaleString()}</span>
-          </div>
-          <div className="progress-bar-container">
-            <div 
-              className="progress-bar-fill" 
-              style={{ width: `${fundingProgress}%` }}
-            ></div>
-          </div>
-          <div className="funding-percentage">{fundingProgress}%</div>
-        </div>
-        
-        <div className="project-actions">
-          <button className="details-button">
-            <span className="eye-icon">👁️</span> Details
-          </button>
-          <button className="invest-button">
-            <span className="dollar-icon">$</span> Invest
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
