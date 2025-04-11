@@ -3,67 +3,82 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#1976d2',
+      main: '#e53935', // vivid red
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#f50057',
+      main: '#9e9e9e', // neutral grey
+      contrastText: '#000000',
     },
     background: {
-      default: '#f5f5f5',
-    }
+      default: '#121212', // black base
+      paper: '#1e1e1e',   // slightly lighter for cards and panels
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#bdbdbd',
+    },
+    error: {
+      main: '#ff5252',
+    },
+    warning: {
+      main: '#ffa726',
+    },
+    info: {
+      main: '#29b6f6',
+    },
+    success: {
+      main: '#66bb6a',
+    },
+    divider: '#424242',
   },
   typography: {
-    fontFamily: [
-      'Inter',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-    h1: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: 14,
+    button: {
+      textTransform: 'none',
       fontWeight: 600,
-    },
-    h2: {
-      fontWeight: 600,
-    },
-    h3: {
-      fontWeight: 600,
-    },
-    h4: {
-      fontWeight: 500,
-    },
-    h5: {
-      fontWeight: 500,
-    },
-    h6: {
-      fontWeight: 500,
     },
   },
   components: {
-    MuiButton: {
+    MuiAppBar: {
       styleOverrides: {
         root: {
-          textTransform: 'none',
-          borderRadius: 8,
+          backgroundColor: '#1e1e1e',
+          color: '#ffffff',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#1e1e1e',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          backgroundColor: '#1e1e1e',
+          color: '#ffffff',
         },
       },
     },
-    MuiPaper: {
+    MuiButton: {
       styleOverrides: {
-        rounded: {
-          borderRadius: 12,
+        containedPrimary: {
+          backgroundColor: '#e53935',
+          '&:hover': {
+            backgroundColor: '#d32f2f',
+          },
+        },
+        containedSecondary: {
+          backgroundColor: '#757575',
+          '&:hover': {
+            backgroundColor: '#616161',
+          },
         },
       },
     },
